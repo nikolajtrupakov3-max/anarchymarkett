@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Оставить отзыв | AnarchyMarket</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .review-container {
+            max-width: 500px;
+            margin: 100px auto;
+            padding: 30px;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 20px;
+            border: 1px solid #ff4444;
+            text-align: center;
+        }
+        .review-container h1 {
+            margin-bottom: 20px;
+            color: #ffffff;
+        }
+        .review-container p {
+            margin-bottom: 20px;
+            color: #aaa;
+        }
+        .rating-stars {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 30px 0;
+        }
+        .rating-star {
+            font-size: 48px;
+            cursor: pointer;
+            color: #555;
+            transition: color 0.2s, transform 0.2s;
+        }
+        .rating-star:hover,
+        .rating-star.selected {
+            color: #ffd700;
+            transform: scale(1.1);
+        }
+        .review-comment {
+            width: 100%;
+            padding: 12px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid #333;
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+            resize: vertical;
+            margin-bottom: 20px;
+        }
+        .submit-review-btn {
+            background: #ff4444;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+        }
+        .submit-review-btn:hover {
+            background: #ff6666;
+        }
+        .back-link {
+            display: block;
+            margin-top: 20px;
+            color: #ff4444;
+            text-decoration: none;
+        }
+        .error-msg {
+            color: #ff4444;
+            margin-bottom: 15px;
+        }
+        .success-msg {
+            color: #4CAF50;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="top-bar">
+        <div class="logo">
+            <img src="images/logo.png" alt="AnarchyMarket" class="logo-img">
+        </div>
+        <div class="nav-links">
+            <a href="index.html">Главная</a>
+            <a href="about.html">О проекте</a>
+            <a href="#">Поддержка</a>
+        </div>
+        <div class="auth-buttons" id="authButtons">
+            <a href="login.html" class="login-btn">Вход</a>
+            <a href="register.html" class="register-btn">Регистрация</a>
+        </div>
+        <div class="user-profile" id="userProfile" style="display: none;">
+            <div class="user-avatar" id="userAvatar">👤</div>
+            <div class="user-dropdown" id="userDropdown">
+                <a href="profile.html" class="dropdown-item">👤 Мой профиль</a>
+                <a href="my-offers.html" class="dropdown-item">📦 Мои объявления</a>
+                <div class="dropdown-divider"></div>
+                <div class="dropdown-item" id="logoutBtn">🚪 Выйти</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="review-container">
+        <h1>⭐ Оставить отзыв</h1>
+        <div id="errorMsg" class="error-msg"></div>
+        <div id="successMsg" class="success-msg"></div>
+        
+        <p id="sellerInfo">Загрузка...</p>
+        
+        <div class="rating-stars" id="ratingStars">
+            <span class="rating-star" data-rating="1">☆</span>
+            <span class="rating-star" data-rating="2">☆</span>
+            <span class="rating-star" data-rating="3">☆</span>
+            <span class="rating-star" data-rating="4">☆</span>
+            <span class="rating-star" data-rating="5">☆</span>
+        </div>
+        
+        <textarea id="reviewComment" class="review-comment" rows="4" placeholder="Расскажите о сделке (необязательно)..."></textarea>
+        
+        <button id="submitReviewBtn" class="submit-review-btn">📝 Оставить отзыв</button>
+        
+        <a href="javascript:history.back()" class="back-link">← Назад</a>
+    </div>
+
+    <script type="module">
+        import { supabase } from './js/supabase.js';
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const sellerId = urlParams.get('seller_id');
+        const offerId = urlParams.get('offer_id');
+        const offerName = urlParams.get('offer_name') || 'товар';
+        
+        let selectedRating = 0;
+        
+        // Проверяем авторизацию
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (!user) {
+            window.location.href = 'login.html';
+        }
+        
+        if (!sellerId) {
+            document.getElementById('errorMsg').textContent = '❌ Продавец не указан';
+            document.getElementById('submitReviewBtn').disabled = true;
+        }
+        
+        // Загружаем информацию о продавце
+        async function loadSellerInfo() {
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('username')
+                .eq('id', sellerId)
+                .maybeSingle();
+            
+            const sellerName = profile?.username || 'Продавец';
+            document.getElementById('sellerInfo').innerHTML = `Вы оставляете отзыв о <strong>${escapeHtml(sellerName)}</strong><br>Товар: ${escapeHtml(offerName)}`;
+        }
+        
+        // Инициализация звёзд
+        const stars = document.querySelectorAll('.rating-star');
+        stars.forEach(star => {
+            star.addEventListener('click', () => {
+                selectedRating = parseInt(star.getAttribute('data-rating'));
+                stars.forEach(s => {
+                    const rating = parseInt(s.getAttribute('data-rating'));
+                    if (rating <= selectedRating) {
+                        s.textContent = '★';
+                        s.classList.add('selected');
+                    } else {
+                        s.textContent = '☆';
+                        s.classList.remove('selected');
+                    }
+                });
+            });
+        });
+        
+        // Отправка отзыва
+        document.getElementById('submitReviewBtn').addEventListener('click', async () => {
+            if (selectedRating === 0) {
+                document.getElementById('errorMsg').textContent = '❌ Пожалуйста, выберите оценку';
+                return;
+            }
+            
+            const comment = document.getElementById('reviewComment').value;
+            
+            // Проверяем, не оставлял ли уже отзыв
+            const { data: existing } = await supabase
+                .from('reviews')
+                .select('id')
+                .eq('offer_id', offerId)
+                .eq('buyer_id', user.id);
+            
+            if (existing && existing.length > 0) {
+                document.getElementById('errorMsg').textContent = '❌ Вы уже оставляли отзыв на это объявление';
+                return;
+            }
+            
+            const { error } = await supabase
+                .from('reviews')
+                .insert([{
+                    offer_id: offerId,
+                    seller_id: sellerId,
+                    buyer_id: user.id,
+                    rating: selectedRating,
+                    comment: comment || null
+                }]);
+            
+            if (error) {
+                document.getElementById('errorMsg').textContent = '❌ Ошибка: ' + error.message;
+            } else {
+                document.getElementById('successMsg').textContent = '✅ Спасибо за отзыв!';
+                document.getElementById('submitReviewBtn').disabled = true;
+                setTimeout(() => {
+                    window.location.href = 'profile.html';
+                }, 2000);
+            }
+        });
+        
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            });
+        }
+        
+        loadSellerInfo();
+        
+        // Аватарка в шапке
+        async function updateUI() {
+            const authBtns = document.getElementById('authButtons');
+            const userProf = document.getElementById('userProfile');
+            const userAv = document.getElementById('userAvatar');
+            
+            if (user) {
+                if (authBtns) authBtns.style.display = 'none';
+                if (userProf) {
+                    userProf.style.display = 'flex';
+                    if (userAv) {
+                        const letter = (user.user_metadata?.username?.[0] || user.email?.[0] || 'U').toUpperCase();
+                        userAv.textContent = letter;
+                    }
+                }
+            } else {
+                if (authBtns) authBtns.style.display = 'flex';
+                if (userProf) userProf.style.display = 'none';
+            }
+        }
+        
+        updateUI();
+        
+        const userAvatar = document.getElementById('userAvatar');
+        const userDropdown = document.getElementById('userDropdown');
+        if (userAvatar && userDropdown) {
+            userAvatar.addEventListener('click', (e) => {
+                e.stopPropagation();
+                userDropdown.classList.toggle('show');
+            });
+            document.addEventListener('click', () => {
+                userDropdown.classList.remove('show');
+            });
+        }
+        
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', async () => {
+                await supabase.auth.signOut();
+                window.location.href = 'index.html';
+            });
+        }
+    </script>
+</body>
+</html>

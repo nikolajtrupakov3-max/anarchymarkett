@@ -168,6 +168,40 @@
     <script type="module">
         import { supabase } from './js/supabase.js';
 
+        // === ПОДДЕРЖКА (ОБРАБОТЧИКИ) ===
+        const supportBtn = document.querySelector('a[href="#"]');
+        if (supportBtn && supportBtn.textContent === 'Поддержка') {
+            supportBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const modal = document.getElementById('supportModal');
+                if (modal) modal.style.display = 'flex';
+            });
+        }
+        
+        const closeModal = document.querySelector('.support-close');
+        if (closeModal) {
+            closeModal.addEventListener('click', () => {
+                const modal = document.getElementById('supportModal');
+                if (modal) modal.style.display = 'none';
+            });
+        }
+        
+        window.addEventListener('click', (e) => {
+            const modal = document.getElementById('supportModal');
+            if (e.target === modal) modal.style.display = 'none';
+        });
+        
+        const copyBtn = document.getElementById('copyTgBtn');
+        if (copyBtn) {
+            copyBtn.addEventListener('click', () => {
+                const tgUsername = document.getElementById('telegramUsername');
+                if (tgUsername) {
+                    navigator.clipboard.writeText(tgUsername.textContent);
+                    alert('✅ Username скопирован: ' + tgUsername.textContent);
+                }
+            });
+        }
+
         // === ПОДСЧЁТ ТОВАРОВ ===
         async function updateProductCounts() {
             const { data: offers, error } = await supabase
@@ -277,6 +311,8 @@
         
         // ЗАПУСКАЕМ ПОДСЧЁТ ТОВАРОВ
         updateProductCounts();
+
     </script>
+
 </body>
 </html>

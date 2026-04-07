@@ -243,7 +243,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
                 <div class="offer-description">${escapeHtml(offer.description || '')}</div>
                 <div class="offer-price">💰 ${offer.price} ₽</div>
-                <div class="offer-seller">📛 Продавец: ${escapeHtml(offer.seller)}</div>
+               <div class="offer-seller">
+    📛 Продавец: 
+    <a href="user-profile.html?id=${offer.user_id}" class="seller-link" style="color: #ff9800; text-decoration: none;">${escapeHtml(offer.seller)}</a>
+</div>
                 <div class="offer-rating">
                     <span class="rating-stars">${starsHtml}</span>
                     <span class="rating-value">${rating.toFixed(1)}</span>

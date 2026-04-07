@@ -173,15 +173,14 @@
             }
             
             // 4. ДОПОЛНИТЕЛЬНО СОХРАНЯЕМ В ТАБЛИЦУ profiles (запасной вариант)
-            const { error: profileError } = await supabase
-                .from('profiles')
-                .upsert({ 
-                    id: data.user.id, 
-                    username: username,
-                    email: email,
-                    created_at: new Date(),
-                    updated_at: new Date()
-                });
+           const { error: profileError } = await supabase
+    .from('profiles')
+    .upsert({ 
+        id: data.user.id, 
+        username: username,
+        created_at: new Date(),  // ← ДОБАВЬТЕ ЭТУ СТРОКУ
+        updated_at: new Date()
+    });
             
             if (profileError) {
                 console.error('Ошибка сохранения в profiles:', profileError);
@@ -220,3 +219,4 @@
     </script>
 </body>
 </html>
+profileError

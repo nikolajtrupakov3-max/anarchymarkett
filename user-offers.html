@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Товары пользователя | AnarchyMarket</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .offers-container {
+            max-width: 1200px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .offers-container h1 {
+            text-align: center;
+            margin-bottom: 10px;
+            color: #ffffff;
+        }
+        .offers-container p {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #aaa;
+        }
+        .offers-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+        }
+        .offer-card {
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid #333;
+            transition: transform 0.3s;
+        }
+        .offer-card:hover {
+            transform: translateY(-5px);
+            border-color: #ff4444;
+        }
+        .offer-title {
+            font-size: 18px;
+            margin-bottom: 10px;
+            color: #ff4444;
+        }
+        .offer-description {
+            color: #aaa;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+        .offer-price {
+            font-size: 22px;
+            font-weight: bold;
+            color: #4CAF50;
+            margin-bottom: 10px;
+        }
+        .offer-server {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 5px;
+        }
+        .offer-category {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 15px;
+        }
+        .no-offers {
+            text-align: center;
+            padding: 60px;
+            color: #aaa;
+            font-size: 18px;
+        }
+        .back-button {
+            text-align: center;
+            margin-top: 40px;
+        }
+        .back-link {
+            color: #ff4444;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="top-bar">
+        <div class="logo">
+            <img src="images/logo.png" alt="AnarchyMarket" class="logo-img">
+        </div>
+        <div class="nav-links">
+            <a href="index.html">Главная</a>
+            <a href="about.html">О проекте</a>
+            <a href="#">Поддержка</a>
+        </div>
+        <div class="auth-buttons" id="authButtons">
+            <a href="login.html" class="login-btn">Вход</a>
+            <a href="register.html" class="register-btn">Регистрация</a>
+        </div>
+        <div class="user-profile" id="userProfile" style="display: none;">
+            <div class="user-avatar" id="userAvatar">👤</div>
+            <div class="user-dropdown" id="userDropdown">
+                <a href="profile.html" class="dropdown-item">👤 Мой профиль</a>
+                <a href="my-offers.html" class="dropdown-item">📦 Мои объявления</a>
+                <div class="dropdown-divider"></div>
+                <div class="dropdown-item" id="logoutBtn">🚪 Выйти</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="offers-container">
+        <h1 id="userName">Товары пользователя</h1>
+        <p id="userInfo"></p>
+        <div id="offersGrid" class="offers-grid">
+            <div class="loading">Загрузка...</div>
+        </div>
+        <div class="back-button">
+            <a href="javascript:history.back()" class="back-link">← Назад</a>
+        </div>
+    </div>
+
+    <!-- Модальное окно поддержки -->
+    <div class="support-modal" id="supportModal">
+        <div class="support-modal-content">
+            <span class="support-close" id="supportCloseBtn">&times;</span>
+            <h2>📱 Связь с поддержкой</h2>
+            <p>Напишите нам в Telegram</p>
+            <div class="qr-container">
+                <div class="qr-placeholder">
+                    🟩🟩🟩🟩🟩🟩🟩<br>
+                    🟩⬜⬜⬜⬜⬜🟩<br>
+                    🟩⬜🟩🟩🟩⬜🟩<br>
+                    🟩⬜🟩⬜🟩⬜🟩<br>
+                    🟩⬜🟩🟩🟩⬜🟩<br>
+                    🟩⬜⬜⬜⬜⬜🟩<br>
+                    🟩🟩🟩🟩🟩🟩🟩
+                </div>
+            </div>
+            <p>Telegram: <strong id="telegramUsername">@anarchy_market</strong></p>
+            <button class="copy-tg-btn" id="copyTgBtn">📋 Скопировать username</button>
+            <p class="qr-hint">Или отсканируйте QR-код камерой телефона</p>
+        </div>
+    </div>
+
+    <script type="module">
+        import { supabase } from './js/supabase.js';
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const userId = urlParams.get('id');
+        
+        if (!userId) {
+            window.location.href = 'index.html';
+        }
+        
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            });
+        }
+        
+        function getServerName(server) {
+            const servers = {
+                'funtime-1_16': '🎮 FunTime 1.16.5',
+                'funtime-1_21': '🚀 FunTime 1.21',
+                'holyworld-lite': '🍃 HolyWorld Lite',
+                'holyworld-classic': '⚔️ HolyWorld Classic',
+                'rw-bedrock': '🪨 ReallyWorld BEDROCK',
+                'rw-grif': '⚔️ ReallyWorld ГРИФ',
+                'rw-grif-ru': '🇷🇺 ReallyWorld ГРИФ (RU)',
+                'rw-mega': '💀 ReallyWorld МЕГА ГРИФ',
+                'rw-grif121': '🚀 ReallyWorld ГРИФ 1.21'
+            };
+            return servers[server] || server || '🌍 ReallyWorld';
+        }
+        
+        async function loadUserOffers() {
+            // Получаем имя пользователя
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('username')
+                .eq('id', userId)
+                .maybeSingle();
+            
+            const userName = profile?.username || 'Пользователь';
+            document.getElementById('userName').textContent = `📦 Товары пользователя ${escapeHtml(userName)}`;
+            document.getElementById('userInfo').textContent = 'Только активные объявления';
+            
+            // Получаем активные товары пользователя
+            const { data: offers, error } = await supabase
+                .from('offers')
+                .select('*')
+                .eq('user_id', userId)
+                .eq('status', 'active')
+                .order('created_at', { ascending: false });
+            
+            const grid = document.getElementById('offersGrid');
+            
+            if (error) {
+                grid.innerHTML = '<div class="no-offers">❌ Ошибка загрузки</div>';
+                return;
+            }
+            
+            if (!offers || offers.length === 0) {
+                grid.innerHTML = '<div class="no-offers">😕 У этого пользователя пока нет активных товаров</div>';
+                return;
+            }
+            
+            grid.innerHTML = '';
+            
+            offers.forEach(offer => {
+                const card = document.createElement('div');
+                card.className = 'offer-card';
+                card.innerHTML = `
+                    <div class="offer-title">${escapeHtml(offer.name)}</div>
+                    <div class="offer-description">${escapeHtml(offer.description || 'Нет описания')}</div>
+                    <div class="offer-price">💰 ${offer.price} ₽</div>
+                    <div class="offer-server">📡 Сервер: ${getServerName(offer.server)}</div>
+                    <div class="offer-category">📂 Категория: ${offer.category}</div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+        
+        loadUserOffers();
+        
+        // === АВАТАРКА В ШАПКЕ ===
+        async function updateUI() {
+            const { data: { user } } = await supabase.auth.getUser();
+            const authBtns = document.getElementById('authButtons');
+            const userProf = document.getElementById('userProfile');
+            const userAv = document.getElementById('userAvatar');
+            
+            if (user) {
+                if (authBtns) authBtns.style.display = 'none';
+                if (userProf) {
+                    userProf.style.display = 'flex';
+                    if (userAv) {
+                        const letter = (user.user_metadata?.username?.[0] || user.email?.[0] || 'U').toUpperCase();
+                        userAv.textContent = letter;
+                    }
+                }
+            } else {
+                if (authBtns) authBtns.style.display = 'flex';
+                if (userProf) userProf.style.display = 'none';
+            }
+        }
+        
+        updateUI();
+        
+        const userAvatar = document.getElementById('userAvatar');
+        const userDropdown = document.getElementById('userDropdown');
+        
+        if (userAvatar && userDropdown) {
+            userAvatar.addEventListener('click', (e) => {
+                e.stopPropagation();
+                userDropdown.classList.toggle('show');
+            });
+            document.addEventListener('click', () => {
+                userDropdown.classList.remove('show');
+            });
+        }
+        
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', async () => {
+                await supabase.auth.signOut();
+                window.location.href = 'index.html';
+            });
+        }
+        
+        // === ПОДДЕРЖКА ===
+        const supportBtn = document.querySelector('a[href="#"]');
+        if (supportBtn && supportBtn.textContent === 'Поддержка') {
+            supportBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const modal = document.getElementById('supportModal');
+                if (modal) modal.style.display = 'flex';
+            });
+        }
+        
+        const closeModal = document.querySelector('.support-close');
+        if (closeModal) {
+            closeModal.addEventListener('click', () => {
+                const modal = document.getElementById('supportModal');
+                if (modal) modal.style.display = 'none';
+            });
+        }
+        
+        window.addEventListener('click', (e) => {
+            const modal = document.getElementById('supportModal');
+            if (e.target === modal) modal.style.display = 'none';
+        });
+        
+        const copyBtn = document.getElementById('copyTgBtn');
+        if (copyBtn) {
+            copyBtn.addEventListener('click', () => {
+                const tgUsername = document.getElementById('telegramUsername');
+                if (tgUsername) {
+                    navigator.clipboard.writeText(tgUsername.textContent);
+                    alert('✅ Username скопирован: ' + tgUsername.textContent);
+                }
+            });
+        }
+    </script>
+</body>
+</html>

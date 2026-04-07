@@ -102,6 +102,12 @@
             padding: 15px;
             margin-bottom: 15px;
             text-align: center;
+            transition: transform 0.2s, background 0.2s;
+            cursor: pointer;
+        }
+        .stat-card:hover {
+            transform: scale(1.05);
+            background: rgba(255,68,68,0.2);
         }
         .stat-value {
             font-size: 36px;
@@ -282,7 +288,7 @@
         <div class="stats-container">
             <div class="stats-header">📊 Моя статистика</div>
             
-            <div class="stat-card">
+            <div class="stat-card" style="cursor: pointer;" onclick="window.location.href='my-offers.html'">
                 <div class="stat-value" id="activeOffersCount">0</div>
                 <div class="stat-label">📦 Активных товаров</div>
             </div>
@@ -319,8 +325,65 @@
         </div>
     </div>
 
+    <!-- Модальное окно поддержки -->
+    <div class="support-modal" id="supportModal">
+        <div class="support-modal-content">
+            <span class="support-close" id="supportCloseBtn">&times;</span>
+            <h2>📱 Связь с поддержкой</h2>
+            <p>Напишите нам в Telegram</p>
+            <div class="qr-container">
+                <div class="qr-placeholder">
+                    🟩🟩🟩🟩🟩🟩🟩<br>
+                    🟩⬜⬜⬜⬜⬜🟩<br>
+                    🟩⬜🟩🟩🟩⬜🟩<br>
+                    🟩⬜🟩⬜🟩⬜🟩<br>
+                    🟩⬜🟩🟩🟩⬜🟩<br>
+                    🟩⬜⬜⬜⬜⬜🟩<br>
+                    🟩🟩🟩🟩🟩🟩🟩
+                </div>
+            </div>
+            <p>Telegram: <strong id="telegramUsername">@anarchy_market</strong></p>
+            <button class="copy-tg-btn" id="copyTgBtn">📋 Скопировать username</button>
+            <p class="qr-hint">Или отсканируйте QR-код камерой телефона</p>
+        </div>
+    </div>
+
     <script type="module">
         import { supabase } from './js/supabase.js';
+
+        // === ПОДДЕРЖКА (ОБРАБОТЧИКИ) ===
+        const supportBtn = document.querySelector('a[href="#"]');
+        if (supportBtn && supportBtn.textContent === 'Поддержка') {
+            supportBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const modal = document.getElementById('supportModal');
+                if (modal) modal.style.display = 'flex';
+            });
+        }
+        
+        const closeModal = document.querySelector('.support-close');
+        if (closeModal) {
+            closeModal.addEventListener('click', () => {
+                const modal = document.getElementById('supportModal');
+                if (modal) modal.style.display = 'none';
+            });
+        }
+        
+        window.addEventListener('click', (e) => {
+            const modal = document.getElementById('supportModal');
+            if (e.target === modal) modal.style.display = 'none';
+        });
+        
+        const copyBtn = document.getElementById('copyTgBtn');
+        if (copyBtn) {
+            copyBtn.addEventListener('click', () => {
+                const tgUsername = document.getElementById('telegramUsername');
+                if (tgUsername) {
+                    navigator.clipboard.writeText(tgUsername.textContent);
+                    alert('✅ Username скопирован: ' + tgUsername.textContent);
+                }
+            });
+        }
 
         const { data: { user } } = await supabase.auth.getUser();
         
@@ -500,7 +563,6 @@
             console.log('🛒 Диалоги о покупке:', purchasesDialogs);
         }
         
-        // НОВАЯ ФУНКЦИЯ УДАЛЕНИЯ ПО offer_id
         async function deleteDialog(offerId) {
             console.log('🗑️ deleteDialog вызван, offerId:', offerId);
             

@@ -1272,3 +1272,7 @@ body.holyworld-classic-category {
     font-size: 14px;
     color: #ff4444;
 }
+.seller-link:hover {
+    text-decoration: underline;
+    color: #ffb74d !important;
+}

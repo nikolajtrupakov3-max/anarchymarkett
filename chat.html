@@ -21,11 +21,27 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
         }
         .chat-header h2 {
             margin: 0;
             color: white;
             font-size: 18px;
+        }
+        .leave-review-chat-btn {
+            background: #ff9800;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.2s;
+        }
+        .leave-review-chat-btn:hover {
+            background: #ffb74d;
+            transform: scale(1.02);
         }
         .chat-messages {
             height: 500px;
@@ -128,6 +144,7 @@
     <div class="chat-container">
         <div class="chat-header">
             <h2 id="chatWithUser">Загрузка...</h2>
+            <button id="leaveReviewBtn" class="leave-review-chat-btn" style="display: none;">⭐ Оставить отзыв</button>
         </div>
         <div class="chat-messages" id="chatMessages">
             <div class="no-messages">Загрузка сообщений...</div>
@@ -158,50 +175,31 @@
             window.location.href = 'login.html';
         }
 
-                // Получаем нормальное имя собеседника (с проверкой profiles)
-                // Получаем нормальное имя собеседника (с проверкой profiles)
+        // Получаем нормальное имя собеседника
         let displayName = receiverName;
         
         if (receiverId) {
-            console.log('🔍 Поиск имени для ID:', receiverId);
-            
-            // 1. Сначала пробуем из profiles
-            const { data: profileData } = await supabase
-                .from('profiles')
-                .select('username')
+            const { data: userData } = await supabase
+                .from('auth.users')
+                .select('raw_user_meta_data, email')
                 .eq('id', receiverId)
                 .maybeSingle();
             
-            if (profileData?.username) {
-                displayName = profileData.username;
-                console.log('✅ Найден ник в profiles:', displayName);
-            }
-            
-            // 2. Если нет — пробуем из auth.users
-            if (!displayName) {
-                const { data: userData } = await supabase
-                    .from('auth.users')
-                    .select('raw_user_meta_data, email')
-                    .eq('id', receiverId)
-                    .maybeSingle();
+            if (userData) {
+                displayName = userData.raw_user_meta_data?.username;
                 
-                if (userData) {
-                    displayName = userData.raw_user_meta_data?.username;
-                    if (displayName) {
-                        console.log('✅ Найден ник в auth.users:', displayName);
-                    } else {
-                        displayName = userData.email?.split('@')[0];
-                        if (displayName) {
-                            console.log('📧 Используем email:', displayName);
-                        }
-                    }
+                if (!displayName) {
+                    const { data: profileData } = await supabase
+                        .from('profiles')
+                        .select('username')
+                        .eq('id', receiverId)
+                        .maybeSingle();
+                    displayName = profileData?.username;
                 }
-            }
-            
-            // 3. Всё пропало — показываем ID
-            if (!displayName) {
-                displayName = receiverId.substring(0, 8);
-                console.log('❌ Используем ID:', displayName);
+                
+                if (!displayName) {
+                    displayName = userData.email?.split('@')[0];
+                }
             }
         }
         
@@ -215,13 +213,12 @@
 
         let messagesListener = null;
 
-                async function loadMessages() {
+        async function loadMessages() {
             let query = supabase
                 .from('messages')
                 .select('*')
                 .or(`and(sender_id.eq.${user.id},receiver_id.eq.${receiverId}),and(sender_id.eq.${receiverId},receiver_id.eq.${user.id})`);
             
-            // ДОБАВЛЯЕМ ФИЛЬТР ПО offer_id (разные чаты для разных товаров!)
             if (offerId) {
                 query = query.eq('offer_id', offerId);
             }
@@ -270,25 +267,13 @@
             container.scrollTop = container.scrollHeight;
         }
 
-               async function sendMessage() {
-            console.log('🔴 sendMessage ВЫЗВАНА!');
-            
+        async function sendMessage() {
             const input = document.getElementById('messageInput');
             const message = input.value.trim();
             
-            console.log('message:', message);
+            if (!message) return;
             
-            if (!message) {
-                console.log('❌ Сообщение пустое');
-                return;
-            }
-            
-            console.log('📤 Отправка...');
-            console.log('offerId:', offerId);
-            console.log('receiverId:', receiverId);
-            console.log('user.id:', user.id);
-            
-            const { data, error } = await supabase
+            const { error } = await supabase
                 .from('messages')
                 .insert([{
                     sender_id: user.id,
@@ -299,10 +284,8 @@
                 }]);
             
             if (error) {
-                console.error('❌ Ошибка отправки:', error);
                 alert('Ошибка отправки: ' + error.message);
             } else {
-                console.log('✅ Сообщение отправлено! Данные:', data);
                 input.value = '';
                 await refreshMessages();
             }
@@ -312,6 +295,7 @@
             const messages = await loadMessages();
             renderMessages(messages);
             await markMessagesAsRead();
+            await checkCanReview();
         }
 
         function subscribeToMessages() {
@@ -330,6 +314,49 @@
                 .subscribe();
         }
 
+        // Проверяем, можно ли оставить отзыв
+        async function checkCanReview() {
+            const reviewBtn = document.getElementById('leaveReviewBtn');
+            if (!reviewBtn) return;
+            
+            if (!offerId) {
+                reviewBtn.style.display = 'none';
+                return;
+            }
+            
+            // Получаем статус объявления
+            const { data: offer, error } = await supabase
+                .from('offers')
+                .select('status, user_id')
+                .eq('id', offerId)
+                .maybeSingle();
+            
+            if (error || !offer) {
+                reviewBtn.style.display = 'none';
+                return;
+            }
+            
+            // Если объявление продано и текущий пользователь НЕ продавец (то есть покупатель)
+            if (offer.status === 'sold' && offer.user_id !== user.id) {
+                // Проверяем, не оставлял ли уже отзыв
+                const { data: existingReview } = await supabase
+                    .from('reviews')
+                    .select('id')
+                    .eq('offer_id', offerId)
+                    .eq('buyer_id', user.id)
+                    .maybeSingle();
+                
+                if (!existingReview) {
+                    reviewBtn.style.display = 'block';
+                    console.log('Кнопка отзыва показана');
+                } else {
+                    reviewBtn.style.display = 'none';
+                }
+            } else {
+                reviewBtn.style.display = 'none';
+            }
+        }
+
         function escapeHtml(str) {
             if (!str) return '';
             return str.replace(/[&<>]/g, function(m) {
@@ -342,11 +369,20 @@
 
         await refreshMessages();
         subscribeToMessages();
+        await checkCanReview();
 
         document.getElementById('sendMessageBtn').addEventListener('click', sendMessage);
         document.getElementById('messageInput').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') sendMessage();
         });
+        
+        // Обработчик кнопки "Оставить отзыв"
+        const reviewBtn = document.getElementById('leaveReviewBtn');
+        if (reviewBtn) {
+            reviewBtn.addEventListener('click', () => {
+                window.location.href = `leave-review.html?offer_id=${offerId}&seller_id=${receiverId}&offer_name=${encodeURIComponent(productName)}`;
+            });
+        }
 
         async function updateAuthUI() {
             const authButtons = document.getElementById('authButtons');
@@ -390,4 +426,3 @@
     </script>
 </body>
 </html>
-
