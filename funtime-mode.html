@@ -115,24 +115,24 @@
     </div>
 
     <div class="mode-selection-grid">
+        <!-- 1.16.5 Anarchy -->
         <div class="mode-card" data-mode="1_16">
             <div class="mode-icon">⚙️</div>
             <h2>1.16.5 Anarchy</h2>
             <p>Классическая анархия на версии 1.16.5</p>
             <div class="mode-stats">
-                <span>👥 Онлайн: 234</span>
-                <span>💰 Товаров: 156</span>
+                <span>💰 Товаров: <span id="productsCount_funtime_1_16">0</span></span>
             </div>
             <button class="select-mode-btn" data-mode="1_16">Выбрать →</button>
         </div>
 
+        <!-- 1.21 Anarchy -->
         <div class="mode-card" data-mode="1_21">
             <div class="mode-icon">🚀</div>
             <h2>1.21 Anarchy</h2>
             <p>Новая версия с актуальным контентом</p>
             <div class="mode-stats">
-                <span>👥 Онлайн: 567</span>
-                <span>💰 Товаров: 342</span>
+                <span>💰 Товаров: <span id="productsCount_funtime_1_21">0</span></span>
             </div>
             <button class="select-mode-btn" data-mode="1_21">Выбрать →</button>
         </div>
@@ -168,6 +168,36 @@
     <script type="module">
         import { supabase } from './js/supabase.js';
 
+        // === ПОДСЧЁТ ТОВАРОВ ===
+        async function updateProductCounts() {
+            const { data: offers, error } = await supabase
+                .from('offers')
+                .select('server')
+                .eq('status', 'active');
+            
+            if (error) {
+                console.error('Ошибка загрузки товаров:', error);
+                return;
+            }
+            
+            let funtime_1_16 = 0;
+            let funtime_1_21 = 0;
+            
+            offers.forEach(offer => {
+                const server = offer.server;
+                if (server === 'funtime-1_16') funtime_1_16++;
+                if (server === 'funtime-1_21') funtime_1_21++;
+            });
+            
+            const ft16 = document.getElementById('productsCount_funtime_1_16');
+            const ft21 = document.getElementById('productsCount_funtime_1_21');
+            
+            if (ft16) ft16.textContent = funtime_1_16;
+            if (ft21) ft21.textContent = funtime_1_21;
+            
+            console.log(`📊 FunTime: 1.16.5: ${funtime_1_16}, 1.21: ${funtime_1_21}`);
+        }
+
         // Проверяем авторизацию пользователя
         async function checkAuth() {
             const { data: { user } } = await supabase.auth.getUser();
@@ -176,7 +206,6 @@
             const userAvatar = document.getElementById('userAvatar');
             
             if (user) {
-                // Пользователь залогинен — показываем аватарку
                 if (authButtons) authButtons.style.display = 'none';
                 if (userProfile) {
                     userProfile.style.display = 'flex';
@@ -184,7 +213,6 @@
                     if (userAvatar) userAvatar.textContent = avatarLetter;
                 }
             } else {
-                // Пользователь не залогинен — показываем кнопки входа/регистрации
                 if (authButtons) authButtons.style.display = 'flex';
                 if (userProfile) userProfile.style.display = 'none';
             }
@@ -246,6 +274,9 @@
                 selectMode('', modeType);
             });
         });
+        
+        // ЗАПУСКАЕМ ПОДСЧЁТ ТОВАРОВ
+        updateProductCounts();
     </script>
 </body>
 </html>

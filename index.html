@@ -51,7 +51,7 @@
                 </div>
                 <h3 class="server-name">ReallyWorld</h3>
                 <div class="server-stats">
-                    <span>💰 Товаров: 156</span>
+                    <span>💰 Товаров: <span id="productsCount_reallyworld">0</span></span>
                 </div>
                 <button class="select-server-btn" data-server="reallyworld">Выбрать сервер →</button>
             </div>
@@ -63,7 +63,7 @@
                 </div>
                 <h3 class="server-name">FunTime</h3>
                 <div class="server-stats">
-                    <span>💰 Товаров: 342</span>
+                    <span>💰 Товаров: <span id="productsCount_funtime">0</span></span>
                 </div>
                 <button class="select-server-btn" data-server="funtime">Выбрать сервер →</button>
             </div>
@@ -75,7 +75,7 @@
                 </div>
                 <h3 class="server-name">HolyWorld</h3>
                 <div class="server-stats">
-                    <span>💰 Товаров: 892</span>
+                    <span>💰 Товаров: <span id="productsCount_holyworld">0</span></span>
                 </div>
                 <button class="select-server-btn" data-server="holyworld">Выбрать сервер →</button>
             </div>
@@ -131,6 +131,62 @@
     <!-- ВСЕ СКРИПТЫ -->
     <script type="module">
         import { supabase } from './js/supabase.js';
+        
+        // === 0. ПОДСЧЁТ ТОВАРОВ ===
+        async function updateProductCounts() {
+            const { data: offers, error } = await supabase
+                .from('offers')
+                .select('server')
+                .eq('status', 'active');
+            
+            if (error) {
+                console.error('Ошибка загрузки товаров:', error);
+                return;
+            }
+            
+            let reallyworldCount = 0;
+            let funtimeCount = 0;
+            let holyworldCount = 0;
+            
+            offers.forEach(offer => {
+                const server = offer.server;
+                
+                // ReallyWorld и его подсерверы
+                if (server === 'reallyworld' || server === 'rw-bedrock' || 
+                    server === 'rw-grif' || server === 'rw-grif-ru' || 
+                    server === 'rw-mega' || server === 'rw-grif121') {
+                    reallyworldCount++;
+                }
+                // FunTime и его подсерверы
+                else if (server === 'funtime' || server === 'funtime-1_16' || server === 'funtime-1_21') {
+                    funtimeCount++;
+                }
+                // HolyWorld и его подсерверы
+                else if (server === 'holyworld' || server === 'holyworld-lite' || server === 'holyworld-classic') {
+                    holyworldCount++;
+                }
+                // Запасные варианты
+                else if (server === 'reallyworld' || (server && server.startsWith('rw-'))) {
+                    reallyworldCount++;
+                }
+                else if (server === 'funtime' || (server && server.startsWith('funtime-'))) {
+                    funtimeCount++;
+                }
+                else if (server === 'holyworld' || (server && server.startsWith('holyworld-'))) {
+                    holyworldCount++;
+                }
+            });
+            
+            const reallyworldSpan = document.getElementById('productsCount_reallyworld');
+            const funtimeSpan = document.getElementById('productsCount_funtime');
+            const holyworldSpan = document.getElementById('productsCount_holyworld');
+            
+            if (reallyworldSpan) reallyworldSpan.textContent = reallyworldCount;
+            if (funtimeSpan) funtimeSpan.textContent = funtimeCount;
+            if (holyworldSpan) holyworldSpan.textContent = holyworldCount;
+            
+            console.log(`📊 Товаров: ReallyWorld: ${reallyworldCount}, FunTime: ${funtimeCount}, HolyWorld: ${holyworldCount}`);
+        }
         
         // === 1. АВАТАРКА ===
         async function updateUI() {
@@ -243,6 +299,9 @@
                 }
             });
         }
+        
+        // === 6. ЗАПУСКАЕМ ПОДСЧЁТ ТОВАРОВ ===
+        updateProductCounts();
     </script>
 </body>
 </html>

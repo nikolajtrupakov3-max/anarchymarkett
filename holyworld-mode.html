@@ -115,24 +115,24 @@
     </div>
 
     <div class="mode-selection-grid">
+        <!-- Lite Анархия -->
         <div class="mode-card" data-mode="lite">
             <div class="mode-icon">🍃</div>
             <h2>Lite Анархия</h2>
             <p>Облегчённые правила, меньше гриферства, подходит для новичков</p>
             <div class="mode-stats">
-                <span>👥 Онлайн: 234</span>
-                <span>💰 Товаров: 56</span>
+                <span>💰 Товаров: <span id="productsCount_holyworld_lite">0</span></span>
             </div>
             <button class="select-mode-btn" data-mode="lite">Выбрать →</button>
         </div>
 
+        <!-- Классик Анархия -->
         <div class="mode-card" data-mode="classic">
             <div class="mode-icon">⚔️</div>
             <h2>Классик Анархия</h2>
             <p>Полная анархия, гриферство, PvP, никаких правил</p>
             <div class="mode-stats">
-                <span>👥 Онлайн: 1247</span>
-                <span>💰 Товаров: 892</span>
+                <span>💰 Товаров: <span id="productsCount_holyworld_classic">0</span></span>
             </div>
             <button class="select-mode-btn" data-mode="classic">Выбрать →</button>
         </div>
@@ -166,6 +166,36 @@
 
     <script type="module">
         import { supabase } from './js/supabase.js';
+
+        // === ПОДСЧЁТ ТОВАРОВ ===
+        async function updateProductCounts() {
+            const { data: offers, error } = await supabase
+                .from('offers')
+                .select('server')
+                .eq('status', 'active');
+            
+            if (error) {
+                console.error('Ошибка загрузки товаров:', error);
+                return;
+            }
+            
+            let holyworld_lite = 0;
+            let holyworld_classic = 0;
+            
+            offers.forEach(offer => {
+                const server = offer.server;
+                if (server === 'holyworld-lite') holyworld_lite++;
+                if (server === 'holyworld-classic') holyworld_classic++;
+            });
+            
+            const hwLite = document.getElementById('productsCount_holyworld_lite');
+            const hwClassic = document.getElementById('productsCount_holyworld_classic');
+            
+            if (hwLite) hwLite.textContent = holyworld_lite;
+            if (hwClassic) hwClassic.textContent = holyworld_classic;
+            
+            console.log(`📊 HolyWorld: Lite: ${holyworld_lite}, Classic: ${holyworld_classic}`);
+        }
 
         async function checkAuth() {
             const { data: { user } } = await supabase.auth.getUser();
@@ -235,6 +265,9 @@
                 selectMode('', modeType);
             });
         });
+        
+        // ЗАПУСКАЕМ ПОДСЧЁТ ТОВАРОВ
+        updateProductCounts();
     </script>
 </body>
 </html>

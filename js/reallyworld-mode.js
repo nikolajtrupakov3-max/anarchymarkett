@@ -1,4 +1,4 @@
-// Скрипт для страницы выбора режима HolyWorld
+// Скрипт для страницы выбора сервера ReallyWorld
 import { supabase } from './supabase.js';
 
 // === ПОДСЧЁТ ТОВАРОВ ===
@@ -13,48 +13,61 @@ async function updateProductCounts() {
         return;
     }
     
-    let holyworld_lite = 0;
-    let holyworld_classic = 0;
+    let rw_bedrock = 0;
+    let rw_grif = 0;
+    let rw_grif_ru = 0;
+    let rw_mega = 0;
+    let rw_grif121 = 0;
     
     offers.forEach(offer => {
         const server = offer.server;
-        if (server === 'holyworld-lite') holyworld_lite++;
-        if (server === 'holyworld-classic') holyworld_classic++;
+        if (server === 'rw-bedrock') rw_bedrock++;
+        if (server === 'rw-grif') rw_grif++;
+        if (server === 'rw-grif-ru') rw_grif_ru++;
+        if (server === 'rw-mega') rw_mega++;
+        if (server === 'rw-grif121') rw_grif121++;
     });
     
-    const hwLite = document.getElementById('productsCount_holyworld_lite');
-    const hwClassic = document.getElementById('productsCount_holyworld_classic');
+    const rw1 = document.getElementById('productsCount_rw_bedrock');
+    const rw2 = document.getElementById('productsCount_rw_grif');
+    const rw3 = document.getElementById('productsCount_rw_grif_ru');
+    const rw4 = document.getElementById('productsCount_rw_mega');
+    const rw5 = document.getElementById('productsCount_rw_grif121');
     
-    if (hwLite) hwLite.textContent = holyworld_lite;
-    if (hwClassic) hwClassic.textContent = holyworld_classic;
+    if (rw1) rw1.textContent = rw_bedrock;
+    if (rw2) rw2.textContent = rw_grif;
+    if (rw3) rw3.textContent = rw_grif_ru;
+    if (rw4) rw4.textContent = rw_mega;
+    if (rw5) rw5.textContent = rw_grif121;
     
-    console.log(`📊 HolyWorld: Lite: ${holyworld_lite}, Classic: ${holyworld_classic}`);
+    console.log(`📊 ReallyWorld: BEDROCK: ${rw_bedrock}, ГРИФ: ${rw_grif}, ГРИФ(RU): ${rw_grif_ru}, МЕГА: ${rw_mega}, ГРИФ1.21: ${rw_grif121}`);
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('Страница выбора режима HolyWorld загружена');
+    console.log('Страница выбора сервера ReallyWorld загружена');
 
     const modeCards = document.querySelectorAll('.mode-card');
     const modeBtns = document.querySelectorAll('.select-mode-btn');
 
     function selectMode(modeName, modeType) {
-        console.log(`Выбран режим: ${modeName} (${modeType})`);
-        
-        if (modeType === 'lite') {
-            window.location.href = 'shop-holyworld-lite.html';
-        } else if (modeType === 'classic') {
-            window.location.href = 'shop-holyworld-classic.html';
+        if (modeType === 'bedrock') {
+            window.location.href = 'shop-rw-bedrock.html';
+        } else if (modeType === 'grif') {
+            window.location.href = 'shop-rw-grif.html';
+        } else if (modeType === 'grif-ru') {
+            window.location.href = 'shop-rw-grif-ru.html';
+        } else if (modeType === 'mega') {
+            window.location.href = 'shop-rw-mega.html';
+        } else if (modeType === 'grif121') {
+            window.location.href = 'shop-rw-grif121.html';
         }
     }
 
     modeCards.forEach(card => {
         card.addEventListener('click', function(e) {
-            if (e.target.classList.contains('select-mode-btn')) {
-                return;
-            }
-            const modeName = this.querySelector('h2').textContent;
+            if (e.target.classList.contains('select-mode-btn')) return;
             const modeType = this.getAttribute('data-mode');
-            selectMode(modeName, modeType);
+            selectMode('', modeType);
         });
     });
 
@@ -62,9 +75,8 @@ document.addEventListener('DOMContentLoaded', function() {
         btn.addEventListener('click', function(e) {
             e.stopPropagation();
             const modeCard = this.closest('.mode-card');
-            const modeName = modeCard.querySelector('h2').textContent;
             const modeType = modeCard.getAttribute('data-mode');
-            selectMode(modeName, modeType);
+            selectMode('', modeType);
         });
     });
 
@@ -74,9 +86,7 @@ document.addEventListener('DOMContentLoaded', function() {
         supportBtn.addEventListener('click', function(e) {
             e.preventDefault();
             const modal = document.getElementById('supportModal');
-            if (modal) {
-                modal.style.display = 'flex';
-            }
+            if (modal) modal.style.display = 'flex';
         });
     }
     
@@ -86,17 +96,13 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
             e.stopPropagation();
             const modal = document.getElementById('supportModal');
-            if (modal) {
-                modal.style.display = 'none';
-            }
+            if (modal) modal.style.display = 'none';
         });
     }
     
     window.addEventListener('click', function(e) {
         const modal = document.getElementById('supportModal');
-        if (e.target === modal) {
-            modal.style.display = 'none';
-        }
+        if (e.target === modal) modal.style.display = 'none';
     });
     
     const copyBtn = document.getElementById('copyTgBtn');

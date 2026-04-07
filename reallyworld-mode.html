@@ -20,7 +20,6 @@
             color: #cccccc;
         }
         
-        /* Используем flexbox для центрирования */
         .mode-selection-grid {
             display: flex;
             flex-wrap: wrap;
@@ -126,8 +125,7 @@
             <h2>BEDROCK</h2>
             <p>Кроссплатформенная анархия</p>
             <div class="mode-stats">
-                <span>👥 Онлайн: 345</span>
-                <span>💰 Товаров: 234</span>
+                <span>💰 Товаров: <span id="productsCount_rw_bedrock">0</span></span>
             </div>
             <button class="select-mode-btn" data-mode="bedrock">Выбрать →</button>
         </div>
@@ -138,8 +136,7 @@
             <h2>ГРИФЕРСКОЕ ВЫЖИВАНИЕ</h2>
             <p>Классический гриф на выживание</p>
             <div class="mode-stats">
-                <span>👥 Онлайн: 567</span>
-                <span>💰 Товаров: 456</span>
+                <span>💰 Товаров: <span id="productsCount_rw_grif">0</span></span>
             </div>
             <button class="select-mode-btn" data-mode="grif">Выбрать →</button>
         </div>
@@ -150,8 +147,7 @@
             <h2>ГРИФЕРСКОЕ ВЫЖИВАНИЕ (RU)</h2>
             <p>Русскоязычный гриф-сервер</p>
             <div class="mode-stats">
-                <span>👥 Онлайн: 789</span>
-                <span>💰 Товаров: 678</span>
+                <span>💰 Товаров: <span id="productsCount_rw_grif_ru">0</span></span>
             </div>
             <button class="select-mode-btn" data-mode="grif-ru">Выбрать →</button>
         </div>
@@ -162,8 +158,7 @@
             <h2>МЕГА ГРИФ</h2>
             <p>Максимальный хаос и анархия</p>
             <div class="mode-stats">
-                <span>👥 Онлайн: 1234</span>
-                <span>💰 Товаров: 892</span>
+                <span>💰 Товаров: <span id="productsCount_rw_mega">0</span></span>
             </div>
             <button class="select-mode-btn" data-mode="mega">Выбрать →</button>
         </div>
@@ -174,8 +169,7 @@
             <h2>ГРИФ 1.21</h2>
             <p>Новейшая версия 1.21</p>
             <div class="mode-stats">
-                <span>👥 Онлайн: 456</span>
-                <span>💰 Товаров: 345</span>
+                <span>💰 Товаров: <span id="productsCount_rw_grif121">0</span></span>
             </div>
             <button class="select-mode-btn" data-mode="grif121">Выбрать →</button>
         </div>
@@ -209,6 +203,48 @@
 
     <script type="module">
         import { supabase } from './js/supabase.js';
+
+        // === ПОДСЧЁТ ТОВАРОВ ===
+        async function updateProductCounts() {
+            const { data: offers, error } = await supabase
+                .from('offers')
+                .select('server')
+                .eq('status', 'active');
+            
+            if (error) {
+                console.error('Ошибка загрузки товаров:', error);
+                return;
+            }
+            
+            let rw_bedrock = 0;
+            let rw_grif = 0;
+            let rw_grif_ru = 0;
+            let rw_mega = 0;
+            let rw_grif121 = 0;
+            
+            offers.forEach(offer => {
+                const server = offer.server;
+                if (server === 'rw-bedrock') rw_bedrock++;
+                if (server === 'rw-grif') rw_grif++;
+                if (server === 'rw-grif-ru') rw_grif_ru++;
+                if (server === 'rw-mega') rw_mega++;
+                if (server === 'rw-grif121') rw_grif121++;
+            });
+            
+            const rw1 = document.getElementById('productsCount_rw_bedrock');
+            const rw2 = document.getElementById('productsCount_rw_grif');
+            const rw3 = document.getElementById('productsCount_rw_grif_ru');
+            const rw4 = document.getElementById('productsCount_rw_mega');
+            const rw5 = document.getElementById('productsCount_rw_grif121');
+            
+            if (rw1) rw1.textContent = rw_bedrock;
+            if (rw2) rw2.textContent = rw_grif;
+            if (rw3) rw3.textContent = rw_grif_ru;
+            if (rw4) rw4.textContent = rw_mega;
+            if (rw5) rw5.textContent = rw_grif121;
+            
+            console.log(`📊 ReallyWorld: BEDROCK: ${rw_bedrock}, ГРИФ: ${rw_grif}, ГРИФ(RU): ${rw_grif_ru}, МЕГА: ${rw_mega}, ГРИФ1.21: ${rw_grif121}`);
+        }
 
         async function checkAuth() {
             const { data: { user } } = await supabase.auth.getUser();
@@ -284,6 +320,9 @@
                 selectMode('', modeType);
             });
         });
+        
+        // ЗАПУСКАЕМ ПОДСЧЁТ ТОВАРОВ
+        updateProductCounts();
     </script>
 </body>
 </html>

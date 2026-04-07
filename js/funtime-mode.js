@@ -1,4 +1,35 @@
 // Скрипт для страницы выбора версии FunTime
+import { supabase } from './supabase.js';
+
+// === ПОДСЧЁТ ТОВАРОВ ===
+async function updateProductCounts() {
+    const { data: offers, error } = await supabase
+        .from('offers')
+        .select('server')
+        .eq('status', 'active');
+    
+    if (error) {
+        console.error('Ошибка загрузки товаров:', error);
+        return;
+    }
+    
+    let funtime_1_16 = 0;
+    let funtime_1_21 = 0;
+    
+    offers.forEach(offer => {
+        const server = offer.server;
+        if (server === 'funtime-1_16') funtime_1_16++;
+        if (server === 'funtime-1_21') funtime_1_21++;
+    });
+    
+    const ft16 = document.getElementById('productsCount_funtime_1_16');
+    const ft21 = document.getElementById('productsCount_funtime_1_21');
+    
+    if (ft16) ft16.textContent = funtime_1_16;
+    if (ft21) ft21.textContent = funtime_1_21;
+    
+    console.log(`📊 FunTime: 1.16.5: ${funtime_1_16}, 1.21: ${funtime_1_21}`);
+}
 
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Страница выбора версии FunTime загружена');
@@ -70,4 +101,7 @@ document.addEventListener('DOMContentLoaded', function() {
             alert('✅ Username скопирован: ' + tgUsername);
         });
     }
+    
+    // ЗАПУСКАЕМ ПОДСЧЁТ ТОВАРОВ
+    updateProductCounts();
 });

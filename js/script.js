@@ -1,8 +1,64 @@
 // AnarchyMarket - Выбор сервера
-import { supabase } from './js/supabase.js';
+import { supabase } from './supabase.js';
 
 document.addEventListener('DOMContentLoaded', async function() {
     console.log('Сайт выбора сервера загружен!');
+
+    // === ПОДСЧЁТ ТОВАРОВ ДЛЯ ГЛАВНОЙ СТРАНИЦЫ ===
+    async function updateProductCounts() {
+        const { data: offers, error } = await supabase
+            .from('offers')
+            .select('server')
+            .eq('status', 'active');
+        
+        if (error) {
+            console.error('Ошибка загрузки товаров:', error);
+            return;
+        }
+        
+        let reallyworldCount = 0;
+        let funtimeCount = 0;
+        let holyworldCount = 0;
+        
+        offers.forEach(offer => {
+            const server = offer.server;
+            
+            // ReallyWorld и его подсерверы
+            if (server === 'reallyworld' || server === 'rw-bedrock' || 
+                server === 'rw-grif' || server === 'rw-grif-ru' || 
+                server === 'rw-mega' || server === 'rw-grif121') {
+                reallyworldCount++;
+            }
+            // FunTime и его подсерверы
+            else if (server === 'funtime' || server === 'funtime-1_16' || server === 'funtime-1_21') {
+                funtimeCount++;
+            }
+            // HolyWorld и его подсерверы
+            else if (server === 'holyworld' || server === 'holyworld-lite' || server === 'holyworld-classic') {
+                holyworldCount++;
+            }
+            // Запасные варианты
+            else if (server === 'reallyworld' || (server && server.startsWith('rw-'))) {
+                reallyworldCount++;
+            }
+            else if (server === 'funtime' || (server && server.startsWith('funtime-'))) {
+                funtimeCount++;
+            }
+            else if (server === 'holyworld' || (server && server.startsWith('holyworld-'))) {
+                holyworldCount++;
+            }
+        });
+        
+        const reallyworldSpan = document.getElementById('productsCount_reallyworld');
+        const funtimeSpan = document.getElementById('productsCount_funtime');
+        const holyworldSpan = document.getElementById('productsCount_holyworld');
+        
+        if (reallyworldSpan) reallyworldSpan.textContent = reallyworldCount;
+        if (funtimeSpan) funtimeSpan.textContent = funtimeCount;
+        if (holyworldSpan) holyworldSpan.textContent = holyworldCount;
+        
+        console.log(`📊 Товаров: ReallyWorld: ${reallyworldCount}, FunTime: ${funtimeCount}, HolyWorld: ${holyworldCount}`);
+    }
 
     // === ОБНОВЛЕНИЕ UI (АВАТАРКА / КНОПКИ) ===
     async function updateAuthUI() {
@@ -166,5 +222,8 @@ document.addEventListener('DOMContentLoaded', async function() {
     
     setInterval(checkUnreadMessages, 10000);
     checkUnreadMessages();
+    
+    // === ЗАПУСКАЕМ ПОДСЧЁТ ТОВАРОВ ===
+    updateProductCounts();
     
 });
