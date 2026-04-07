@@ -325,7 +325,6 @@
         </div>
     </div>
 
-    <!-- Модальное окно поддержки -->
     <div class="support-modal" id="supportModal">
         <div class="support-modal-content">
             <span class="support-close" id="supportCloseBtn">&times;</span>
@@ -351,7 +350,6 @@
     <script type="module">
         import { supabase } from './js/supabase.js';
 
-        // === ПОДДЕРЖКА (ОБРАБОТЧИКИ) ===
         const supportBtn = document.querySelector('a[href="#"]');
         if (supportBtn && supportBtn.textContent === 'Поддержка') {
             supportBtn.addEventListener('click', (e) => {
@@ -406,25 +404,35 @@
         document.getElementById('userAvatar').textContent = avatarLetter;
         
         async function loadUserStats() {
-            const { data: offers, error } = await supabase
+            // 1. Активные товары (из offers)
+            const { data: offers } = await supabase
                 .from('offers')
-                .select('*')
+                .select('status')
                 .eq('user_id', user.id);
             
-            if (error) {
-                console.error('Ошибка загрузки статистики:', error);
-                return;
-            }
+            const activeOffers = offers?.filter(o => o.status === 'active').length || 0;
+            document.getElementById('activeOffersCount').textContent = activeOffers;
             
-            const activeOffers = offers.filter(o => o.status === 'active');
-            const soldOffers = offers.filter(o => o.status === 'sold');
+            // 2. Проданные товары (из user_stats, накопленная статистика)
+            const { data: stats } = await supabase
+                .from('user_stats')
+                .select('total_sold')
+                .eq('id', user.id)
+                .maybeSingle();
             
-            document.getElementById('activeOffersCount').textContent = activeOffers.length;
-            document.getElementById('soldOffersCount').textContent = soldOffers.length;
+            const soldOffers = stats?.total_sold || 0;
+            document.getElementById('soldOffersCount').textContent = soldOffers;
+            
+            // 3. Рейтинг (из reviews)
+            const { data: reviews } = await supabase
+                .from('reviews')
+                .select('rating')
+                .eq('seller_id', user.id);
             
             let rating = 5.0;
-            if (soldOffers.length > 0 || activeOffers.length > 0) {
-                rating = (soldOffers.length * 5) / (activeOffers.length + soldOffers.length);
+            if (reviews && reviews.length > 0) {
+                const sum = reviews.reduce((acc, r) => acc + r.rating, 0);
+                rating = sum / reviews.length;
                 rating = Math.round(rating * 10) / 10;
             }
             
@@ -452,13 +460,13 @@
         async function getUserNameById(userId) {
             if (!userId) return 'Неизвестный';
             
-            const { data: profileData, error: profileError } = await supabase
+            const { data: profileData } = await supabase
                 .from('profiles')
                 .select('username')
                 .eq('id', userId)
                 .maybeSingle();
             
-            if (!profileError && profileData?.username) {
+            if (profileData?.username) {
                 return profileData.username;
             }
             
