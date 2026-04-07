@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>О проекте | AnarchyMarket</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="about-page">
+
+    <!-- Верхняя панель -->
+    <div class="top-bar">
+        <div class="logo">
+            <img src="images/logo.png" alt="AnarchyMarket" class="logo-img">
+        </div>
+        <div class="nav-links">
+            <a href="index.html">Главная</a>
+            <a href="about.html">О проекте</a>
+            <a href="#">Поддержка</a>
+        </div>
+    </div>
+
+    <!-- Контент страницы -->
+    <div class="about-container">
+        <h1>📖 О проекте</h1>
+        
+        <div class="about-card">
+            <h2>🎯 Для чего создан проект?</h2>
+            <p>AnarchyMarket — это торговая площадка для игроков анархий-серверов Minecraft. 
+            Здесь вы можете безопасно покупать и продавать внутриигровые ресурсы за реальные деньги.</p>
+        </div>
+
+        <div class="about-card">
+            <h2>⚡ Почему анархия?</h2>
+            <p>На анархий-серверах нет правил — игроки могут всё. Но это создаёт спрос на ресурсы: 
+            алмазы, незерит, оружие, зелья и многое другое. Мы помогаем игрокам обмениваться этими ресурсами 
+            безопасно и быстро.</p>
+        </div>
+
+       <div class="about-card">
+    <h2>🔒 Как проходят сделки?</h2>
+    <p>Наша платформа использует безопасную систему проведения сделок:</p>
+    <ul>
+        <li>💰 Покупатель оплачивает товар — деньги временно замораживаются на счёте</li>
+        <li>📦 Продавец передаёт товар в игре покупателю</li>
+        <li>✅ Покупатель подтверждает получение товара</li>
+        <li>💸 Замороженные деньги переводятся продавцу</li>
+    </ul>
+    <p>Это защищает обе стороны сделки: продавец точно получит оплату, а покупатель — товар.</p>
+</div>
+
+        <div class="about-card">
+            <h2>📞 Поддержка</h2>
+            <p>По всем вопросам обращайтесь к гаранту в Telegram: <strong>@anarchy_garant</strong><br>
+            Или в Discord: <strong>anarchy_market</strong></p>
+        </div>
+
+        <div class="about-card">
+            <h2>📅 Планы на будущее</h2>
+            <ul>
+                <li>✅ Автоматическая регистрация пользователей</li>
+                <li>✅ Система отзывов о продавцах</li>
+                <li>✅ Онлайн-чат с гарантом</li>
+                <li>✅ Мобильное приложение</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Кнопка назад -->
+    <div class="back-button">
+        <a href="index.html" class="back-link">← Вернуться на главную</a>
+    </div>
+
+</body><!-- Модальное окно поддержки -->
+<div class="support-modal" id="supportModal">
+    <div class="support-modal-content">
+        <span class="support-close" id="supportCloseBtn">&times;</span>
+        <h2>📱 Связь с поддержкой</h2>
+        <p>Напишите нам в Telegram</p>
+        <div class="qr-container">
+            <div class="qr-placeholder">
+                🟩🟩🟩🟩🟩🟩🟩<br>
+                🟩⬜⬜⬜⬜⬜🟩<br>
+                🟩⬜🟩🟩🟩⬜🟩<br>
+                🟩⬜🟩⬜🟩⬜🟩<br>
+                🟩⬜🟩🟩🟩⬜🟩<br>
+                🟩⬜⬜⬜⬜⬜🟩<br>
+                🟩🟩🟩🟩🟩🟩🟩
+            </div>
+        </div>
+        <p>Telegram: <strong id="telegramUsername">@anarchy_market</strong></p>
+        <button class="copy-tg-btn" id="copyTgBtn">📋 Скопировать username</button>
+        <p class="qr-hint">Или отсканируйте QR-код камерой телефона</p>
+    </div>
+</div>
+
+<script src="js/script.js"></script>
+</html>

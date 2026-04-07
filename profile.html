@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Мой профиль | AnarchyMarket</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .profile-wrapper {
+            max-width: 1200px;
+            margin: 50px auto;
+            padding: 20px;
+            display: flex;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+        .profile-container {
+            flex: 2;
+            min-width: 300px;
+            padding: 30px;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 20px;
+            border: 1px solid #ff4444;
+        }
+        .stats-container {
+            flex: 1;
+            min-width: 250px;
+            padding: 30px;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 20px;
+            border: 1px solid #ff4444;
+        }
+        .dialogs-container {
+            flex: 2;
+            min-width: 300px;
+            padding: 30px;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 20px;
+            border: 1px solid #ff4444;
+        }
+        .profile-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .profile-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ff4444, #cc0000);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            margin: 0 auto 20px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .profile-avatar:hover {
+            transform: scale(1.05);
+        }
+        .profile-info {
+            margin-bottom: 20px;
+        }
+        .profile-label {
+            color: #aaa;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+        .profile-value {
+            color: white;
+            font-size: 18px;
+            padding: 10px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+        }
+        .edit-btn {
+            background: #ff4444;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 20px;
+            width: 100%;
+        }
+        .edit-btn:hover {
+            background: #ff6666;
+        }
+        .avatar-upload {
+            display: none;
+        }
+        .stats-header {
+            text-align: center;
+            margin-bottom: 25px;
+            font-size: 24px;
+            color: #ff4444;
+        }
+        .stat-card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 36px;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+        .stat-label {
+            color: #aaa;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        .rating-stars {
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+            margin: 10px 0;
+        }
+        .star {
+            font-size: 24px;
+            color: #555;
+        }
+        .star.filled {
+            color: #ffd700;
+        }
+        .rating-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #ffd700;
+        }
+        .dialogs-header {
+            text-align: center;
+            margin-bottom: 25px;
+            font-size: 24px;
+            color: #ff4444;
+        }
+        .dialog-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+        }
+        .tab-btn {
+            background: transparent;
+            border: none;
+            color: #aaa;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-radius: 8px;
+        }
+        .tab-btn.active {
+            background: #ff4444;
+            color: white;
+        }
+        .tab-btn:hover:not(.active) {
+            background: rgba(255,68,68,0.3);
+        }
+        .dialog-card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .dialog-info {
+            flex: 2;
+        }
+        .dialog-product {
+            font-weight: bold;
+            color: #ff4444;
+            margin-bottom: 5px;
+        }
+        .dialog-buyer {
+            color: #aaa;
+            font-size: 14px;
+        }
+        .dialog-last-message {
+            color: #888;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+        .dialog-actions {
+            display: flex;
+            gap: 10px;
+        }
+        .dialog-reply-btn {
+            background: #ff9800;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.2s;
+        }
+        .dialog-reply-btn:hover {
+            transform: scale(1.05);
+            background: #ffb74d;
+        }
+        .dialog-delete-btn {
+            background: #ff4444;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.2s;
+        }
+        .dialog-delete-btn:hover {
+            transform: scale(1.05);
+            background: #ff6666;
+        }
+        .no-dialogs {
+            text-align: center;
+            color: #aaa;
+            padding: 30px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="top-bar">
+        <div class="logo">
+            <img src="images/logo.png" alt="AnarchyMarket" class="logo-img">
+        </div>
+        <div class="nav-links">
+            <a href="index.html">Главная</a>
+            <a href="about.html">О проекте</a>
+            <a href="#">Поддержка</a>
+        </div>
+        <div class="auth-buttons" id="authButtons"></div>
+        <div class="user-profile" id="userProfile" style="display: none;">
+            <div class="user-avatar" id="userAvatar">👤</div>
+            <div class="user-dropdown" id="userDropdown">
+                <a href="profile.html" class="dropdown-item">👤 Мой профиль</a>
+                <a href="my-offers.html" class="dropdown-item">📦 Мои объявления</a>
+                <div class="dropdown-divider"></div>
+                <div class="dropdown-item" id="logoutBtn">🚪 Выйти</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="profile-wrapper">
+        <div class="profile-container" id="profileContainer">
+            <div class="profile-header">
+                <div class="profile-avatar" id="profileAvatar" onclick="document.getElementById('avatarInput').click()">
+                    👤
+                </div>
+                <input type="file" id="avatarInput" class="avatar-upload" accept="image/*">
+                <h2>Мой профиль</h2>
+            </div>
+            
+            <div class="profile-info">
+                <div class="profile-label">📧 Email</div>
+                <div class="profile-value" id="profileEmail">Загрузка...</div>
+            </div>
+            
+            <div class="profile-info">
+                <div class="profile-label">🎮 Ник в Minecraft</div>
+                <div class="profile-value" id="profileUsername">Загрузка...</div>
+            </div>
+            
+            <div class="profile-info">
+                <div class="profile-label">📅 Дата регистрации</div>
+                <div class="profile-value" id="profileCreated">Загрузка...</div>
+            </div>
+            
+            <button class="edit-btn" id="editProfileBtn">✏️ Редактировать профиль</button>
+        </div>
+
+        <div class="stats-container">
+            <div class="stats-header">📊 Моя статистика</div>
+            
+            <div class="stat-card">
+                <div class="stat-value" id="activeOffersCount">0</div>
+                <div class="stat-label">📦 Активных товаров</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-value" id="soldOffersCount">0</div>
+                <div class="stat-label">✅ Продано товаров</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="rating-value" id="ratingValue">0.0</div>
+                <div class="rating-stars" id="ratingStars">
+                    <span class="star">★</span>
+                    <span class="star">★</span>
+                    <span class="star">★</span>
+                    <span class="star">★</span>
+                    <span class="star">★</span>
+                </div>
+                <div class="stat-label">⭐ Рейтинг продавца</div>
+            </div>
+        </div>
+
+        <div class="dialogs-container">
+            <div class="dialogs-header">💬 Мои диалоги</div>
+            
+            <div class="dialog-tabs">
+                <button class="tab-btn active" data-tab="sales">📦 Диалоги о продаже</button>
+                <button class="tab-btn" data-tab="purchases">🛒 Диалоги о покупке</button>
+            </div>
+            
+            <div id="dialogsList">
+                <div class="loading">Загрузка...</div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { supabase } from './js/supabase.js';
+
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (!user) {
+            window.location.href = 'login.html';
+        }
+        
+        let currentTab = 'sales';
+        let salesDialogs = [];
+        let purchasesDialogs = [];
+        
+        document.getElementById('profileEmail').textContent = user.email;
+        document.getElementById('profileUsername').textContent = user.user_metadata?.username || 'Не указан';
+        
+        const createdDate = new Date(user.created_at);
+        document.getElementById('profileCreated').textContent = createdDate.toLocaleDateString('ru-RU');
+        
+        const avatarLetter = (user.user_metadata?.username?.[0] || user.email?.[0] || 'U').toUpperCase();
+        document.getElementById('profileAvatar').textContent = avatarLetter;
+        document.getElementById('userAvatar').textContent = avatarLetter;
+        
+        async function loadUserStats() {
+            const { data: offers, error } = await supabase
+                .from('offers')
+                .select('*')
+                .eq('user_id', user.id);
+            
+            if (error) {
+                console.error('Ошибка загрузки статистики:', error);
+                return;
+            }
+            
+            const activeOffers = offers.filter(o => o.status === 'active');
+            const soldOffers = offers.filter(o => o.status === 'sold');
+            
+            document.getElementById('activeOffersCount').textContent = activeOffers.length;
+            document.getElementById('soldOffersCount').textContent = soldOffers.length;
+            
+            let rating = 5.0;
+            if (soldOffers.length > 0 || activeOffers.length > 0) {
+                rating = (soldOffers.length * 5) / (activeOffers.length + soldOffers.length);
+                rating = Math.round(rating * 10) / 10;
+            }
+            
+            document.getElementById('ratingValue').textContent = rating.toFixed(1);
+            
+            const stars = document.querySelectorAll('.star');
+            const fullStars = Math.floor(rating);
+            const hasHalfStar = rating % 1 >= 0.5;
+            
+            stars.forEach((star, index) => {
+                star.classList.remove('filled');
+                if (index < fullStars) {
+                    star.classList.add('filled');
+                } else if (index === fullStars && hasHalfStar) {
+                    star.textContent = '½';
+                    star.classList.add('filled');
+                } else {
+                    star.textContent = '★';
+                }
+            });
+        }
+        
+        await loadUserStats();
+        
+        async function getUserNameById(userId) {
+            if (!userId) return 'Неизвестный';
+            
+            const { data: profileData, error: profileError } = await supabase
+                .from('profiles')
+                .select('username')
+                .eq('id', userId)
+                .maybeSingle();
+            
+            if (!profileError && profileData?.username) {
+                return profileData.username;
+            }
+            
+            return userId.substring(0, 8);
+        }
+        
+        async function loadAllDialogsFromSupabase() {
+            const { data: messages, error } = await supabase
+                .from('messages')
+                .select('*')
+                .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
+                .order('created_at', { ascending: true });
+            
+            if (error) {
+                console.error('Ошибка загрузки сообщений:', error);
+                return [];
+            }
+            
+            if (!messages || messages.length === 0) return [];
+            
+            const dialogsMap = new Map();
+            
+            for (const msg of messages) {
+                const key = msg.offer_id ? `offer_${msg.offer_id}` : `chat_${msg.sender_id}_${msg.receiver_id}`;
+                
+                if (!dialogsMap.has(key)) {
+                    let offerName = 'Товар';
+                    let offerPrice = 0;
+                    
+                    if (msg.offer_id) {
+                        try {
+                            const { data: offerData } = await supabase
+                                .from('offers')
+                                .select('name, price')
+                                .eq('id', msg.offer_id)
+                                .maybeSingle();
+                            if (offerData) {
+                                offerName = offerData.name;
+                                offerPrice = offerData.price;
+                            }
+                        } catch (err) {}
+                    }
+                    
+                    const otherUserId = msg.sender_id === user.id ? msg.receiver_id : msg.sender_id;
+                    const otherUserName = await getUserNameById(otherUserId);
+                    
+                    const { data: firstMsg } = await supabase
+                        .from('messages')
+                        .select('sender_id')
+                        .eq('offer_id', msg.offer_id || 0)
+                        .order('created_at', { ascending: true })
+                        .limit(1)
+                        .maybeSingle();
+                    
+                    let isBuyer = false;
+                    let isSeller = false;
+                    
+                    if (firstMsg) {
+                        if (firstMsg.sender_id === user.id) {
+                            isBuyer = true;
+                            isSeller = false;
+                        } else {
+                            isBuyer = false;
+                            isSeller = true;
+                        }
+                    } else {
+                        isBuyer = (msg.sender_id === user.id);
+                        isSeller = !isBuyer;
+                    }
+                    
+                    dialogsMap.set(key, {
+                        user_id: otherUserId,
+                        user_name: otherUserName,
+                        offer_id: msg.offer_id,
+                        offer_name: offerName,
+                        offer_price: offerPrice,
+                        last_message: msg.message,
+                        last_message_time: msg.created_at,
+                        isBuyer: isBuyer,
+                        isSeller: isSeller
+                    });
+                } else {
+                    const existing = dialogsMap.get(key);
+                    if (new Date(msg.created_at) > new Date(existing.last_message_time)) {
+                        existing.last_message = msg.message;
+                        existing.last_message_time = msg.created_at;
+                        dialogsMap.set(key, existing);
+                    }
+                }
+            }
+            
+            return Array.from(dialogsMap.values());
+        }
+        
+        async function loadAllDialogs() {
+            const allDialogs = await loadAllDialogsFromSupabase();
+            salesDialogs = allDialogs.filter(d => d.isSeller === true);
+            purchasesDialogs = allDialogs.filter(d => d.isBuyer === true);
+            
+            console.log('Все диалоги:', allDialogs);
+            console.log('📦 Диалоги о продаже:', salesDialogs);
+            console.log('🛒 Диалоги о покупке:', purchasesDialogs);
+        }
+        
+        // НОВАЯ ФУНКЦИЯ УДАЛЕНИЯ ПО offer_id
+        async function deleteDialog(offerId) {
+            console.log('🗑️ deleteDialog вызван, offerId:', offerId);
+            
+            if (!offerId || offerId === '0' || offerId === 'null') {
+                alert('❌ Не удалось определить диалог для удаления');
+                return;
+            }
+            
+            if (!confirm(`⚠️ Вы уверены, что хотите удалить этот диалог?`)) {
+                return;
+            }
+            
+            const { error } = await supabase
+                .from('messages')
+                .delete()
+                .eq('offer_id', offerId);
+            
+            if (error) {
+                console.error('Ошибка удаления:', error);
+                alert('❌ Ошибка: ' + error.message);
+            } else {
+                console.log('✅ Диалог с offer_id', offerId, 'удалён');
+                alert('✅ Диалог удалён');
+                window.location.reload();
+            }
+        }
+        
+        function renderDialogs() {
+            const container = document.getElementById('dialogsList');
+            const dialogs = currentTab === 'sales' ? salesDialogs : purchasesDialogs;
+            const tabName = currentTab === 'sales' ? 'продаже' : 'покупке';
+            
+            if (dialogs.length === 0) {
+                container.innerHTML = `<div class="no-dialogs">😊 У вас пока нет диалогов о ${tabName}</div>`;
+                return;
+            }
+            
+            container.innerHTML = '';
+            
+            dialogs.forEach(dialog => {
+                const dialogCard = document.createElement('div');
+                dialogCard.className = 'dialog-card';
+                dialogCard.innerHTML = `
+                    <div class="dialog-info">
+                        <div class="dialog-product">📦 ${escapeHtml(dialog.offer_name)} (${dialog.offer_price} ₽)</div>
+                        <div class="dialog-buyer">👤 ${escapeHtml(dialog.user_name)}</div>
+                        <div class="dialog-last-message">💬 ${escapeHtml(dialog.last_message.substring(0, 50))}${dialog.last_message.length > 50 ? '...' : ''}</div>
+                    </div>
+                    <div class="dialog-actions">
+                        <button class="dialog-reply-btn" data-user-id="${dialog.user_id}" data-user-name="${escapeHtml(dialog.user_name)}" data-offer-id="${dialog.offer_id || ''}" data-offer-name="${escapeHtml(dialog.offer_name)}" data-offer-price="${dialog.offer_price}">💬 Ответить</button>
+                        <button class="dialog-delete-btn" data-offer-id="${dialog.offer_id || '0'}">🗑️ Удалить</button>
+                    </div>
+                `;
+                container.appendChild(dialogCard);
+            });
+            
+            document.querySelectorAll('.dialog-reply-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const userId = btn.getAttribute('data-user-id');
+                    const userName = btn.getAttribute('data-user-name');
+                    const offerId = btn.getAttribute('data-offer-id');
+                    const offerName = btn.getAttribute('data-offer-name');
+                    const offerPrice = btn.getAttribute('data-offer-price');
+                    
+                    window.location.href = `chat.html?user_id=${userId}&name=${encodeURIComponent(userName)}&offer_id=${offerId}&product=${encodeURIComponent(offerName)}&price=${offerPrice}`;
+                });
+            });
+            
+            document.querySelectorAll('.dialog-delete-btn').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const offerId = btn.getAttribute('data-offer-id');
+                    console.log('🔴 Нажата кнопка удаления, offerId:', offerId);
+                    
+                    if (offerId && offerId !== '0' && offerId !== 'null') {
+                        await deleteDialog(offerId);
+                    } else {
+                        alert('❌ Не удалось определить диалог для удаления');
+                    }
+                });
+            });
+        }
+        
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentTab = btn.getAttribute('data-tab');
+                renderDialogs();
+            });
+        });
+        
+        async function initDialogs() {
+            await loadAllDialogs();
+            renderDialogs();
+        }
+        
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            });
+        }
+        
+        await initDialogs();
+        
+        document.getElementById('editProfileBtn').addEventListener('click', async () => {
+            const newUsername = prompt('Введите ваш ник в Minecraft:', user.user_metadata?.username || '');
+            if (newUsername && newUsername.trim()) {
+                const { error } = await supabase.auth.updateUser({
+                    data: { username: newUsername.trim() }
+                });
+                
+                if (error) {
+                    alert('Ошибка: ' + error.message);
+                } else {
+                    const { error: profileError } = await supabase
+                        .from('profiles')
+                        .upsert({ 
+                            id: user.id, 
+                            username: newUsername.trim(),
+                            updated_at: new Date()
+                        });
+                    
+                    if (profileError) {
+                        console.error('Ошибка сохранения в profiles:', profileError);
+                    }
+                    
+                    alert('✅ Ник обновлён!');
+                    location.reload();
+                }
+            }
+        });
+        
+        document.getElementById('avatarInput').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                alert('Функция загрузки аватарок будет добавлена позже!');
+            }
+        });
+        
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+            await supabase.auth.signOut();
+            window.location.href = 'index.html';
+        });
+        
+        document.getElementById('userProfile').style.display = 'flex';
+        document.getElementById('authButtons').style.display = 'none';
+        
+        const userAvatar = document.getElementById('userAvatar');
+        const userDropdown = document.getElementById('userDropdown');
+        
+        userAvatar.addEventListener('click', (e) => {
+            e.stopPropagation();
+            userDropdown.classList.toggle('show');
+        });
+        
+        document.addEventListener('click', () => {
+            userDropdown.classList.remove('show');
+        });
+    </script>
+</body>
+</html>

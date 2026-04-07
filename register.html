@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Регистрация | AnarchyMarket</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .auth-container {
+            max-width: 400px;
+            margin: 100px auto;
+            padding: 30px;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 20px;
+            border: 1px solid #ff4444;
+        }
+        .auth-container h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #ffffff;
+        }
+        .auth-input {
+            width: 100%;
+            padding: 12px 15px;
+            margin-bottom: 15px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid #333;
+            border-radius: 8px;
+            color: white;
+            font-size: 16px;
+        }
+        .auth-btn {
+            width: 100%;
+            padding: 12px;
+            background: #ff4444;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .auth-btn:hover {
+            transform: scale(1.02);
+            background: #ff6666;
+        }
+        .auth-link {
+            text-align: center;
+            margin-top: 20px;
+            color: #aaa;
+        }
+        .auth-link a {
+            color: #ff4444;
+            text-decoration: none;
+        }
+        .error-msg {
+            color: #ff4444;
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+        .success-msg {
+            color: #4CAF50;
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body class="auth-page">
+
+    <div class="top-bar">
+        <div class="logo">
+            <img src="images/logo.png" alt="AnarchyMarket" class="logo-img">
+        </div>
+        <div class="nav-links">
+            <a href="index.html">Главная</a>
+            <a href="about.html">О проекте</a>
+            <a href="#">Поддержка</a>
+        </div>
+        <div class="auth-buttons" id="authButtons"></div>
+        <div class="user-profile" id="userProfile" style="display: none;">
+            <div class="user-avatar" id="userAvatar">👤</div>
+            <div class="user-dropdown" id="userDropdown">
+                <a href="profile.html" class="dropdown-item">👤 Мой профиль</a>
+                <a href="my-offers.html" class="dropdown-item">📦 Мои объявления</a>
+                <div class="dropdown-divider"></div>
+                <div class="dropdown-item" id="logoutBtn">🚪 Выйти</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="auth-container">
+        <h1>📝 Регистрация</h1>
+        <div id="errorMsg" class="error-msg"></div>
+        <div id="successMsg" class="success-msg"></div>
+        
+        <input type="email" id="regEmail" placeholder="Email" class="auth-input">
+        <input type="text" id="regUsername" placeholder="Ваш ник в Minecraft" class="auth-input">
+        <input type="password" id="regPassword" placeholder="Пароль (минимум 6 символов)" class="auth-input">
+        <input type="password" id="regConfirmPassword" placeholder="Повторите пароль" class="auth-input">
+        
+        <button class="auth-btn" id="registerBtn">Зарегистрироваться</button>
+        
+        <div class="auth-link">
+            Уже есть аккаунт? <a href="login.html">Войти</a>
+        </div>
+    </div>
+
+    <script type="module">
+        import { supabase } from './js/supabase.js';
+
+        const registerBtn = document.getElementById('registerBtn');
+        const errorMsg = document.getElementById('errorMsg');
+        const successMsg = document.getElementById('successMsg');
+
+        async function register() {
+            errorMsg.textContent = '';
+            successMsg.textContent = '';
+            
+            const email = document.getElementById('regEmail').value;
+            const username = document.getElementById('regUsername').value;
+            const password = document.getElementById('regPassword').value;
+            const confirmPassword = document.getElementById('regConfirmPassword').value;
+            
+            if (!email || !username || !password || !confirmPassword) {
+                errorMsg.textContent = '❌ Заполните все поля!';
+                return;
+            }
+            
+            if (password !== confirmPassword) {
+                errorMsg.textContent = '❌ Пароли не совпадают!';
+                return;
+            }
+            
+            if (password.length < 6) {
+                errorMsg.textContent = '❌ Пароль должен быть не менее 6 символов!';
+                return;
+            }
+            
+            // 1. РЕГИСТРАЦИЯ
+            const { data, error } = await supabase.auth.signUp({
+                email: email,
+                password: password,
+                options: {
+                    data: {
+                        username: username
+                    }
+                }
+            });
+            
+            if (error) {
+                errorMsg.textContent = '❌ ' + error.message;
+                return;
+            }
+            
+            if (!data.user) {
+                errorMsg.textContent = '❌ Ошибка: пользователь не создан';
+                return;
+            }
+            
+            // 2. ЖДЁМ 2 СЕКУНДЫ (чтобы пользователь точно появился в auth.users)
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            // 3. ПРИНУДИТЕЛЬНО ЗАПИСЫВАЕМ НИК В raw_user_meta_data (через updateUser)
+            const { error: updateError } = await supabase.auth.updateUser({
+                data: { username: username }
+            });
+            
+            if (updateError) {
+                console.error('Ошибка updateUser:', updateError);
+            }
+            
+            // 4. ДОПОЛНИТЕЛЬНО СОХРАНЯЕМ В ТАБЛИЦУ profiles (запасной вариант)
+            const { error: profileError } = await supabase
+                .from('profiles')
+                .upsert({ 
+                    id: data.user.id, 
+                    username: username,
+                    email: email,
+                    created_at: new Date(),
+                    updated_at: new Date()
+                });
+            
+            if (profileError) {
+                console.error('Ошибка сохранения в profiles:', profileError);
+            }
+            
+            // 5. ПРОВЕРЯЕМ, СОХРАНИЛСЯ ЛИ НИК
+            const { data: { user } } = await supabase.auth.getUser();
+            const savedUsername = user?.user_metadata?.username;
+            
+            if (savedUsername === username) {
+                successMsg.textContent = '✅ Регистрация успешна! Ник "' + username + '" сохранён.';
+            } else if (!profileError) {
+                successMsg.textContent = '✅ Регистрация успешна! Ник "' + username + '" сохранён в profiles.';
+            } else {
+                successMsg.textContent = '✅ Регистрация успешна! Но ник не сохранился. Обновите в профиле.';
+            }
+            
+            // Очистка формы
+            document.getElementById('regEmail').value = '';
+            document.getElementById('regUsername').value = '';
+            document.getElementById('regPassword').value = '';
+            document.getElementById('regConfirmPassword').value = '';
+            
+            setTimeout(() => {
+                window.location.href = 'login.html';
+            }, 3000);
+        }
+        
+        registerBtn.addEventListener('click', register);
+        
+        document.querySelectorAll('.auth-input').forEach(input => {
+            input.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') register();
+            });
+        });
+    </script>
+</body>
+</html>

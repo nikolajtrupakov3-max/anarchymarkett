@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AnarchyMarket | Выбор сервера</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- Верхняя панель -->
+    <div class="top-bar">
+        <div class="logo">
+            <img src="images/logo.png" alt="AnarchyMarket" class="logo-img">
+        </div>
+        <div class="nav-links">
+            <a href="index.html">Главная</a>
+            <a href="about.html">О проекте</a>
+            <a href="#">Поддержка</a>
+        </div>
+        <div class="auth-buttons" id="authButtons">
+            <a href="login.html" class="login-btn">Вход</a>
+            <a href="register.html" class="register-btn">Регистрация</a>
+        </div>
+        <div class="user-profile" id="userProfile" style="display: none;">
+            <div class="user-avatar" id="userAvatar">👤</div>
+            <span class="user-name" id="userName"></span>
+            <div class="user-dropdown" id="userDropdown">
+                <a href="profile.html" class="dropdown-item">👤 Мой профиль</a>
+                <a href="my-offers.html" class="dropdown-item">📦 Мои объявления</a>
+                <div class="dropdown-divider"></div>
+                <div class="dropdown-item" id="logoutBtn">🚪 Выйти</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Главный экран выбора сервера -->
+    <div class="hero-section">
+        <h1>Выберите ваш сервер</h1>
+        <p>Покупайте и продавайте ресурсы с анархий-серверов Minecraft</p>
+    </div>
+
+    <!-- Карточки серверов -->
+    <div class="servers-section">
+        <div class="servers-grid">
+            
+            <!-- Сервер 1: ReallyWorld -->
+            <div class="server-card" data-server="reallyworld">
+                <div class="server-image" id="server-reallyworld">
+                    <img src="images/reallyworld-logo.png" alt="ReallyWorld" class="server-logo">
+                </div>
+                <h3 class="server-name">ReallyWorld</h3>
+                <div class="server-stats">
+                    <span>💰 Товаров: 156</span>
+                </div>
+                <button class="select-server-btn" data-server="reallyworld">Выбрать сервер →</button>
+            </div>
+
+            <!-- Сервер 2: FunTime -->
+            <div class="server-card" data-server="funtime">
+                <div class="server-image" id="server-funtime">
+                    <img src="images/funtime-logo.png" alt="FunTime" class="server-logo">
+                </div>
+                <h3 class="server-name">FunTime</h3>
+                <div class="server-stats">
+                    <span>💰 Товаров: 342</span>
+                </div>
+                <button class="select-server-btn" data-server="funtime">Выбрать сервер →</button>
+            </div>
+
+            <!-- Сервер 3: HolyWorld -->
+            <div class="server-card" data-server="holyworld">
+                <div class="server-image" id="server-holyworld">
+                    <img src="images/holyworld-logo.png" alt="HolyWorld" class="server-logo">
+                </div>
+                <h3 class="server-name">HolyWorld</h3>
+                <div class="server-stats">
+                    <span>💰 Товаров: 892</span>
+                </div>
+                <button class="select-server-btn" data-server="holyworld">Выбрать сервер →</button>
+            </div>
+
+        </div>
+    </div>
+    
+    <!-- Как это работает -->
+    <div class="how-it-works">
+        <h2>Как это работает?</h2>
+        <div class="steps">
+            <div class="step">
+                <div class="step-number">1</div>
+                <h3>Выберите сервер</h3>
+                <p>Нажмите на кнопку сервера, где вы играете</p>
+            </div>
+            <div class="step">
+                <div class="step-number">2</div>
+                <h3>Найдите товар</h3>
+                <p>Просматривайте объявления других игроков</p>
+            </div>
+            <div class="step">
+                <div class="step-number">3</div>
+                <h3>Купите или продайте</h3>
+                <p>Безопасная сделка через гаранта</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно поддержки -->
+    <div class="support-modal" id="supportModal">
+        <div class="support-modal-content">
+            <span class="support-close" id="supportCloseBtn">&times;</span>
+            <h2>📱 Связь с поддержкой</h2>
+            <p>Напишите нам в Telegram</p>
+            <div class="qr-container" id="qrCodeContainer">
+                <div class="qr-placeholder" id="qrPlaceholder">
+                    🟩🟩🟩🟩🟩🟩🟩<br>
+                    🟩⬜⬜⬜⬜⬜🟩<br>
+                    🟩⬜🟩🟩🟩⬜🟩<br>
+                    🟩⬜🟩⬜🟩⬜🟩<br>
+                    🟩⬜🟩🟩🟩⬜🟩<br>
+                    🟩⬜⬜⬜⬜⬜🟩<br>
+                    🟩🟩🟩🟩🟩🟩🟩
+                </div>
+            </div>
+            <p class="telegram-link">Telegram: <strong id="telegramUsername">@anarchy_market</strong></p>
+            <button class="copy-tg-btn" id="copyTgBtn">📋 Скопировать username</button>
+            <p class="qr-hint">Или отсканируйте QR-код камерой телефона</p>
+        </div>
+    </div>
+
+    <!-- ВСЕ СКРИПТЫ -->
+    <script type="module">
+        import { supabase } from './js/supabase.js';
+        
+        // === 1. АВАТАРКА ===
+        async function updateUI() {
+            const { data: { user } } = await supabase.auth.getUser();
+            const authBtns = document.getElementById('authButtons');
+            const userProf = document.getElementById('userProfile');
+            const userAv = document.getElementById('userAvatar');
+            
+            if (user) {
+                if (authBtns) authBtns.style.display = 'none';
+                if (userProf) {
+                    userProf.style.display = 'flex';
+                    if (userAv) {
+                        const letter = (user.user_metadata?.username?.[0] || user.email?.[0] || 'U').toUpperCase();
+                        userAv.textContent = letter;
+                    }
+                }
+            } else {
+                if (authBtns) authBtns.style.display = 'flex';
+                if (userProf) userProf.style.display = 'none';
+            }
+        }
+        
+        updateUI();
+        
+        // === 2. ВЫПАДАЮЩЕЕ МЕНЮ ===
+        const userAvatar = document.getElementById('userAvatar');
+        const userDropdown = document.getElementById('userDropdown');
+        
+        if (userAvatar && userDropdown) {
+            userAvatar.addEventListener('click', (e) => {
+                e.stopPropagation();
+                userDropdown.classList.toggle('show');
+            });
+            document.addEventListener('click', () => {
+                userDropdown.classList.remove('show');
+            });
+        }
+        
+        // === 3. ВЫХОД ===
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', async () => {
+                await supabase.auth.signOut();
+                window.location.href = 'index.html';
+            });
+        }
+        
+        // === 4. ПЕРЕХОДЫ НА СЕРВЕРА ===
+        function selectServer(serverName) {
+            console.log('Выбран сервер:', serverName);
+            if (serverName === 'ReallyWorld') {
+                window.location.href = 'reallyworld-mode.html';
+            } else if (serverName === 'FunTime') {
+                window.location.href = 'funtime-mode.html';
+            } else if (serverName === 'HolyWorld') {
+                window.location.href = 'holyworld-mode.html';
+            }
+        }
+        
+        // Обработчики для карточек
+        document.querySelectorAll('.server-card').forEach(card => {
+            card.addEventListener('click', (e) => {
+                if (e.target.classList.contains('select-server-btn')) return;
+                const name = card.querySelector('.server-name').textContent;
+                selectServer(name);
+            });
+        });
+        
+        // Обработчики для кнопок
+        document.querySelectorAll('.select-server-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const card = btn.closest('.server-card');
+                const name = card.querySelector('.server-name').textContent;
+                selectServer(name);
+            });
+        });
+        
+        // === 5. ПОДДЕРЖКА ===
+        const supportBtn = document.querySelector('a[href="#"]');
+        if (supportBtn && supportBtn.textContent === 'Поддержка') {
+            supportBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const modal = document.getElementById('supportModal');
+                if (modal) modal.style.display = 'flex';
+            });
+        }
+        
+        const closeModal = document.querySelector('.support-close');
+        if (closeModal) {
+            closeModal.addEventListener('click', () => {
+                const modal = document.getElementById('supportModal');
+                if (modal) modal.style.display = 'none';
+            });
+        }
+        
+        window.addEventListener('click', (e) => {
+            const modal = document.getElementById('supportModal');
+            if (e.target === modal) modal.style.display = 'none';
+        });
+        
+        const copyBtn = document.getElementById('copyTgBtn');
+        if (copyBtn) {
+            copyBtn.addEventListener('click', () => {
+                const tgUsername = document.getElementById('telegramUsername');
+                if (tgUsername) {
+                    navigator.clipboard.writeText(tgUsername.textContent);
+                    alert('✅ Username скопирован: ' + tgUsername.textContent);
+                }
+            });
+        }
+    </script>
+</body>
+</html>

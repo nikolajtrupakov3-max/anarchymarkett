@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Вход | AnarchyMarket</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .auth-container {
+            max-width: 400px;
+            margin: 100px auto;
+            padding: 30px;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 20px;
+            border: 1px solid #ff4444;
+        }
+        .auth-container h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #ffffff;
+        }
+        .auth-input {
+            width: 100%;
+            padding: 12px 15px;
+            margin-bottom: 15px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid #333;
+            border-radius: 8px;
+            color: white;
+            font-size: 16px;
+        }
+        .auth-btn {
+            width: 100%;
+            padding: 12px;
+            background: #ff4444;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .auth-btn:hover {
+            transform: scale(1.02);
+            background: #ff6666;
+        }
+        .auth-link {
+            text-align: center;
+            margin-top: 20px;
+            color: #aaa;
+        }
+        .auth-link a {
+            color: #ff4444;
+            text-decoration: none;
+        }
+        .error-msg {
+            color: #ff4444;
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body class="auth-page">
+
+    <div class="top-bar">
+        <div class="logo">
+            <img src="images/logo.png" alt="AnarchyMarket" class="logo-img">
+        </div>
+        <div class="nav-links">
+            <a href="index.html">Главная</a>
+            <a href="about.html">О проекте</a>
+            <a href="#">Поддержка</a>
+        </div>
+        <div class="auth-buttons" id="authButtons"></div>
+        <div class="user-profile" id="userProfile" style="display: none;">
+            <div class="user-avatar" id="userAvatar">👤</div>
+            <div class="user-dropdown" id="userDropdown">
+                <a href="profile.html" class="dropdown-item">👤 Мой профиль</a>
+                <a href="my-offers.html" class="dropdown-item">📦 Мои объявления</a>
+                <div class="dropdown-divider"></div>
+                <div class="dropdown-item" id="logoutBtn">🚪 Выйти</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="auth-container">
+        <h1>🔐 Вход</h1>
+        <div id="errorMsg" class="error-msg"></div>
+        
+        <input type="email" id="loginEmail" placeholder="Email" class="auth-input">
+        <input type="password" id="loginPassword" placeholder="Пароль" class="auth-input">
+        
+        <button class="auth-btn" id="loginBtn">Войти</button>
+        
+        <div class="auth-link">
+            Нет аккаунта? <a href="register.html">Зарегистрироваться</a>
+        </div>
+    </div>
+
+    <script type="module">
+        import { supabase } from './js/supabase.js';
+
+        const loginBtn = document.getElementById('loginBtn');
+        const errorMsg = document.getElementById('errorMsg');
+
+        // Проверяем, залогинены ли уже
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+            window.location.href = 'index.html';
+        }
+
+        async function login() {
+            errorMsg.textContent = '';
+            
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            if (!email || !password) {
+                errorMsg.textContent = '❌ Заполните все поля!';
+                return;
+            }
+            
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email: email,
+                password: password
+            });
+            
+            if (error) {
+                errorMsg.textContent = '❌ ' + error.message;
+                return;
+            }
+            
+            // Успешный вход
+            localStorage.setItem('user', JSON.stringify(data.user));
+            window.location.href = 'index.html';
+        }
+        
+        loginBtn.addEventListener('click', login);
+        
+        document.querySelectorAll('.auth-input').forEach(input => {
+            input.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') login();
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Чат | AnarchyMarket</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .chat-container {
+            max-width: 800px;
+            margin: 50px auto;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 20px;
+            border: 1px solid #ff4444;
+            overflow: hidden;
+        }
+        .chat-header {
+            background: rgba(0, 0, 0, 0.9);
+            padding: 15px 20px;
+            border-bottom: 1px solid #ff4444;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .chat-header h2 {
+            margin: 0;
+            color: white;
+            font-size: 18px;
+        }
+        .chat-messages {
+            height: 500px;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .message {
+            max-width: 70%;
+            padding: 10px 15px;
+            border-radius: 15px;
+            word-wrap: break-word;
+        }
+        .message-sent {
+            background: #ff4444;
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 5px;
+        }
+        .message-received {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            align-self: flex-start;
+            border-bottom-left-radius: 5px;
+        }
+        .message-info {
+            font-size: 11px;
+            margin-top: 5px;
+            opacity: 0.7;
+        }
+        .chat-input-area {
+            display: flex;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.9);
+            border-top: 1px solid #333;
+        }
+        .chat-input {
+            flex: 1;
+            padding: 10px 15px;
+            background: rgba(255,255,255,0.1);
+            border: none;
+            border-radius: 20px;
+            color: white;
+            outline: none;
+        }
+        .chat-send-btn {
+            margin-left: 10px;
+            padding: 10px 20px;
+            background: #ff4444;
+            border: none;
+            border-radius: 20px;
+            color: white;
+            cursor: pointer;
+        }
+        .chat-send-btn:hover {
+            background: #ff6666;
+        }
+        .no-messages {
+            text-align: center;
+            color: #aaa;
+            padding: 50px;
+        }
+        .back-link-chat {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            color: #ff4444;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="top-bar">
+        <div class="logo">
+            <img src="images/logo.png" alt="AnarchyMarket" class="logo-img">
+        </div>
+        <div class="nav-links">
+            <a href="index.html">Главная</a>
+            <a href="about.html">О проекте</a>
+            <a href="#">Поддержка</a>
+        </div>
+        <div class="auth-buttons" id="authButtons">
+            <a href="login.html" class="login-btn">Вход</a>
+            <a href="register.html" class="register-btn">Регистрация</a>
+        </div>
+        <div class="user-profile" id="userProfile" style="display: none;">
+            <div class="user-avatar" id="userAvatar">👤</div>
+            <div class="user-dropdown" id="userDropdown">
+                <a href="profile.html" class="dropdown-item">👤 Мой профиль</a>
+                <a href="my-offers.html" class="dropdown-item">📦 Мои объявления</a>
+                <div class="dropdown-divider"></div>
+                <div class="dropdown-item" id="logoutBtn">🚪 Выйти</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="chat-container">
+        <div class="chat-header">
+            <h2 id="chatWithUser">Загрузка...</h2>
+        </div>
+        <div class="chat-messages" id="chatMessages">
+            <div class="no-messages">Загрузка сообщений...</div>
+        </div>
+        <div class="chat-input-area">
+            <input type="text" class="chat-input" id="messageInput" placeholder="Введите сообщение...">
+            <button class="chat-send-btn" id="sendMessageBtn">📤 Отправить</button>
+        </div>
+    </div>
+    <a href="javascript:history.back()" class="back-link-chat">← Назад</a>
+
+    <script type="module">
+        import { supabase } from './js/supabase.js';
+
+        const urlParams = new URLSearchParams(window.location.search);
+        let receiverId = urlParams.get('user_id');
+        let receiverName = urlParams.get('name') || 'Пользователь';
+        const offerId = urlParams.get('offer_id');
+        const productName = urlParams.get('product') || '';
+        const productPrice = urlParams.get('price') || '';
+
+        console.log('offer_id из URL:', offerId);
+        console.log('productName:', productName);
+
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (!user) {
+            window.location.href = 'login.html';
+        }
+
+                // Получаем нормальное имя собеседника (с проверкой profiles)
+                // Получаем нормальное имя собеседника (с проверкой profiles)
+        let displayName = receiverName;
+        
+        if (receiverId) {
+            console.log('🔍 Поиск имени для ID:', receiverId);
+            
+            // 1. Сначала пробуем из profiles
+            const { data: profileData } = await supabase
+                .from('profiles')
+                .select('username')
+                .eq('id', receiverId)
+                .maybeSingle();
+            
+            if (profileData?.username) {
+                displayName = profileData.username;
+                console.log('✅ Найден ник в profiles:', displayName);
+            }
+            
+            // 2. Если нет — пробуем из auth.users
+            if (!displayName) {
+                const { data: userData } = await supabase
+                    .from('auth.users')
+                    .select('raw_user_meta_data, email')
+                    .eq('id', receiverId)
+                    .maybeSingle();
+                
+                if (userData) {
+                    displayName = userData.raw_user_meta_data?.username;
+                    if (displayName) {
+                        console.log('✅ Найден ник в auth.users:', displayName);
+                    } else {
+                        displayName = userData.email?.split('@')[0];
+                        if (displayName) {
+                            console.log('📧 Используем email:', displayName);
+                        }
+                    }
+                }
+            }
+            
+            // 3. Всё пропало — показываем ID
+            if (!displayName) {
+                displayName = receiverId.substring(0, 8);
+                console.log('❌ Используем ID:', displayName);
+            }
+        }
+        
+        receiverName = displayName || receiverName;
+
+        if (productName && productName !== '') {
+            document.getElementById('chatWithUser').innerHTML = `Чат с ${receiverName}<br><small style="font-size: 12px;">Товар: ${productName} (${productPrice} ₽)</small>`;
+        } else {
+            document.getElementById('chatWithUser').textContent = `Чат с ${receiverName}`;
+        }
+
+        let messagesListener = null;
+
+                async function loadMessages() {
+            let query = supabase
+                .from('messages')
+                .select('*')
+                .or(`and(sender_id.eq.${user.id},receiver_id.eq.${receiverId}),and(sender_id.eq.${receiverId},receiver_id.eq.${user.id})`);
+            
+            // ДОБАВЛЯЕМ ФИЛЬТР ПО offer_id (разные чаты для разных товаров!)
+            if (offerId) {
+                query = query.eq('offer_id', offerId);
+            }
+            
+            const { data, error } = await query.order('created_at', { ascending: true });
+            
+            if (error) {
+                console.error('Ошибка загрузки:', error);
+                return [];
+            }
+            return data || [];
+        }
+
+        async function markMessagesAsRead() {
+            const { error } = await supabase
+                .from('messages')
+                .update({ is_read: true })
+                .eq('receiver_id', user.id)
+                .eq('sender_id', receiverId);
+            
+            if (error) {
+                console.error('Ошибка отметки прочитанных:', error);
+            } else {
+                console.log('Сообщения отмечены как прочитанные');
+            }
+        }
+
+        function renderMessages(messages) {
+            const container = document.getElementById('chatMessages');
+            if (!messages || messages.length === 0) {
+                container.innerHTML = '<div class="no-messages">😊 Напишите первое сообщение!</div>';
+                return;
+            }
+            
+            container.innerHTML = '';
+            messages.forEach(msg => {
+                const isSent = msg.sender_id === user.id;
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${isSent ? 'message-sent' : 'message-received'}`;
+                messageDiv.innerHTML = `
+                    <div>${escapeHtml(msg.message)}</div>
+                    <div class="message-info">${new Date(msg.created_at).toLocaleTimeString()}</div>
+                `;
+                container.appendChild(messageDiv);
+            });
+            container.scrollTop = container.scrollHeight;
+        }
+
+               async function sendMessage() {
+            console.log('🔴 sendMessage ВЫЗВАНА!');
+            
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            
+            console.log('message:', message);
+            
+            if (!message) {
+                console.log('❌ Сообщение пустое');
+                return;
+            }
+            
+            console.log('📤 Отправка...');
+            console.log('offerId:', offerId);
+            console.log('receiverId:', receiverId);
+            console.log('user.id:', user.id);
+            
+            const { data, error } = await supabase
+                .from('messages')
+                .insert([{
+                    sender_id: user.id,
+                    receiver_id: receiverId,
+                    offer_id: offerId || null,
+                    message: message,
+                    is_read: false
+                }]);
+            
+            if (error) {
+                console.error('❌ Ошибка отправки:', error);
+                alert('Ошибка отправки: ' + error.message);
+            } else {
+                console.log('✅ Сообщение отправлено! Данные:', data);
+                input.value = '';
+                await refreshMessages();
+            }
+        }
+
+        async function refreshMessages() {
+            const messages = await loadMessages();
+            renderMessages(messages);
+            await markMessagesAsRead();
+        }
+
+        function subscribeToMessages() {
+            if (messagesListener) return;
+            
+            messagesListener = supabase
+                .channel('messages-channel')
+                .on('postgres_changes', {
+                    event: 'INSERT',
+                    schema: 'public',
+                    table: 'messages',
+                    filter: `receiver_id=eq.${user.id}`
+                }, () => {
+                    refreshMessages();
+                })
+                .subscribe();
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            });
+        }
+
+        await refreshMessages();
+        subscribeToMessages();
+
+        document.getElementById('sendMessageBtn').addEventListener('click', sendMessage);
+        document.getElementById('messageInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+
+        async function updateAuthUI() {
+            const authButtons = document.getElementById('authButtons');
+            const userProfile = document.getElementById('userProfile');
+            const userAvatar = document.getElementById('userAvatar');
+            
+            if (user) {
+                if (authButtons) authButtons.style.display = 'none';
+                if (userProfile) {
+                    userProfile.style.display = 'flex';
+                    const avatarLetter = (user.user_metadata?.username?.[0] || user.email?.[0] || 'U').toUpperCase();
+                    if (userAvatar) userAvatar.textContent = avatarLetter;
+                }
+            } else {
+                if (authButtons) authButtons.style.display = 'flex';
+                if (userProfile) userProfile.style.display = 'none';
+            }
+        }
+        
+        updateAuthUI();
+        
+        const userAvatar = document.getElementById('userAvatar');
+        const userDropdown = document.getElementById('userDropdown');
+        if (userAvatar && userDropdown) {
+            userAvatar.addEventListener('click', (e) => {
+                e.stopPropagation();
+                userDropdown.classList.toggle('show');
+            });
+            document.addEventListener('click', () => {
+                userDropdown.classList.remove('show');
+            });
+        }
+        
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', async () => {
+                await supabase.auth.signOut();
+                window.location.href = 'index.html';
+            });
+        }
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Мои объявления | AnarchyMarket</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .my-offers-container {
+            max-width: 1200px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .my-offers-container h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #ffffff;
+        }
+        .offers-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+        }
+        .offer-card {
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid #333;
+            transition: transform 0.3s;
+            position: relative;
+        }
+        .offer-card:hover {
+            transform: translateY(-5px);
+            border-color: #ff4444;
+        }
+        .offer-status {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .status-active {
+            background: #4CAF50;
+            color: white;
+        }
+        .status-sold {
+            background: #666;
+            color: white;
+        }
+        .offer-title {
+            font-size: 18px;
+            margin-bottom: 10px;
+            color: #ff4444;
+        }
+        .offer-description {
+            color: #aaa;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+        .offer-price {
+            font-size: 22px;
+            font-weight: bold;
+            color: #4CAF50;
+            margin-bottom: 10px;
+        }
+        .offer-category {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 15px;
+        }
+        .offer-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        .delete-btn, .mark-sold-btn, .view-reviews-btn, .reply-btn {
+            flex: 1;
+            padding: 8px;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.2s;
+        }
+        .delete-btn {
+            background: #ff4444;
+        }
+        .delete-btn:hover {
+            transform: scale(1.02);
+            background: #ff6666;
+        }
+        .mark-sold-btn {
+            background: #4CAF50;
+        }
+        .mark-sold-btn:hover {
+            transform: scale(1.02);
+            background: #66bb6a;
+        }
+        .view-reviews-btn {
+            background: #2196F3;
+        }
+        .view-reviews-btn:hover {
+            transform: scale(1.02);
+            background: #42a5f5;
+        }
+        .reply-btn {
+            background: #ff9800;
+        }
+        .reply-btn:hover {
+            transform: scale(1.02);
+            background: #ffb74d;
+        }
+        .new-message-badge {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: #ff4444;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: bold;
+            animation: pulse 1s infinite;
+            z-index: 10;
+        }
+        @keyframes pulse {
+            0% { opacity: 0.7; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.05); }
+            100% { opacity: 0.7; transform: scale(1); }
+        }
+        .no-offers {
+            text-align: center;
+            padding: 60px;
+            color: #aaa;
+            font-size: 18px;
+        }
+        .loading {
+            text-align: center;
+            padding: 60px;
+            color: #aaa;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="top-bar">
+        <div class="logo">
+            <img src="images/logo.png" alt="AnarchyMarket" class="logo-img">
+        </div>
+        <div class="nav-links">
+            <a href="index.html">Главная</a>
+            <a href="about.html">О проекте</a>
+            <a href="#">Поддержка</a>
+        </div>
+        <div class="auth-buttons" id="authButtons"></div>
+        <div class="user-profile" id="userProfile" style="display: none;">
+            <div class="user-avatar" id="userAvatar">👤</div>
+            <div class="user-dropdown" id="userDropdown">
+                <a href="profile.html" class="dropdown-item">👤 Мой профиль</a>
+                <a href="my-offers.html" class="dropdown-item">📦 Мои объявления</a>
+                <div class="dropdown-divider"></div>
+                <div class="dropdown-item" id="logoutBtn">🚪 Выйти</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="my-offers-container">
+        <h1>📦 Мои объявления</h1>
+        <div id="offersGrid" class="offers-grid">
+            <div class="loading">Загрузка...</div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { supabase } from './js/supabase.js';
+        import { loadMyOffersFromSupabase } from './js/load-offers-supabase.js';
+        import { getSellerReviews } from './js/reviews.js';
+
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (!user) {
+            window.location.href = 'login.html';
+        }
+        
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            });
+        }
+        
+        async function hasNewMessages(offerId) {
+            const { data, error } = await supabase
+                .from('messages')
+                .select('id')
+                .eq('offer_id', offerId)
+                .eq('is_read', false);
+            
+            if (error) {
+                console.error('Ошибка проверки сообщений:', error);
+                return false;
+            }
+            return data && data.length > 0;
+        }
+        
+              // Получение списка уникальных собеседников по объявлению (ИСПРАВЛЕННАЯ ВЕРСИЯ)
+        async function getChatPartners(offerId) {
+            // 1. Получаем все сообщения по этому объявлению
+            const { data: messages, error } = await supabase
+                .from('messages')
+                .select('sender_id, receiver_id')
+                .eq('offer_id', offerId);
+            
+            if (error) {
+                console.error('Ошибка получения сообщений:', error);
+                return [];
+            }
+            
+            if (!messages || messages.length === 0) {
+                return [];
+            }
+            
+            // 2. Собираем уникальных собеседников (не текущего пользователя)
+            const partnersSet = new Set();
+            messages.forEach(msg => {
+                if (msg.sender_id !== user.id) partnersSet.add(msg.sender_id);
+                if (msg.receiver_id !== user.id) partnersSet.add(msg.receiver_id);
+            });
+            
+            // 3. Для каждого собеседника получаем нормальное имя
+            const partnersList = [];
+            for (const partnerId of partnersSet) {
+                let partnerName = null;
+                
+                // 3.1 Пробуем получить из auth.users (raw_user_meta_data)
+                const { data: authData } = await supabase
+                    .from('auth.users')
+                    .select('raw_user_meta_data, email')
+                    .eq('id', partnerId)
+                    .maybeSingle();
+                
+                if (authData) {
+                    partnerName = authData.raw_user_meta_data?.username;
+                }
+                
+                // 3.2 Если нет — пробуем из таблицы profiles
+                if (!partnerName) {
+                    const { data: profileData } = await supabase
+                        .from('profiles')
+                        .select('username')
+                        .eq('id', partnerId)
+                        .maybeSingle();
+                    partnerName = profileData?.username;
+                }
+                
+                // 3.3 Если всё равно нет — показываем email или обрезанный ID
+                if (!partnerName) {
+                    partnerName = authData?.email || partnerId.substring(0, 8);
+                }
+                
+                partnersList.push({
+                    id: partnerId,
+                    name: partnerName
+                });
+            }
+            
+            console.log('Найденные собеседники:', partnersList);
+            return partnersList;
+        }
+        
+        async function loadMyOffers() {
+            const offers = await loadMyOffersFromSupabase();
+            
+            const grid = document.getElementById('offersGrid');
+            
+            if (!offers || offers.length === 0) {
+                grid.innerHTML = '<div class="no-offers">😕 У вас пока нет объявлений. Создайте первое!</div>';
+                return;
+            }
+            
+            grid.innerHTML = '';
+            
+            for (const offer of offers) {
+                const hasNewMsg = await hasNewMessages(offer.id);
+                const newMessageBadge = hasNewMsg ? '<div class="new-message-badge">📩 Новое сообщение</div>' : '';
+                
+                const card = document.createElement('div');
+                card.className = 'offer-card';
+                card.innerHTML = `
+                    ${newMessageBadge}
+                    <div class="offer-status ${offer.status === 'active' ? 'status-active' : 'status-sold'}">
+                        ${offer.status === 'active' ? 'Активно' : 'Продано'}
+                    </div>
+                    <div class="offer-title">${escapeHtml(offer.name)}</div>
+                    <div class="offer-description">${escapeHtml(offer.description || 'Нет описания')}</div>
+                    <div class="offer-price">💰 ${offer.price} ₽</div>
+                    <div class="offer-category">📂 ${offer.category}</div>
+                    <div class="offer-actions">
+                        ${offer.status === 'active' ? `<button class="mark-sold-btn" data-id="${offer.id}">✅ Пометить как проданное</button>` : ''}
+                        <button class="delete-btn" data-id="${offer.id}">🗑️ Удалить</button>
+                        <button class="view-reviews-btn" data-id="${offer.id}" data-seller="${offer.user_id || user.id}">⭐ Отзывы</button>
+                        <button class="reply-btn" data-id="${offer.id}" data-name="${escapeHtml(offer.name)}" data-price="${offer.price}">💬 Ответить</button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            }
+            
+            document.querySelectorAll('.mark-sold-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const id = btn.getAttribute('data-id');
+                    const { error } = await supabase
+                        .from('offers')
+                        .update({ status: 'sold' })
+                        .eq('id', id)
+                        .eq('user_id', user.id);
+                    
+                    if (error) {
+                        alert('Ошибка: ' + error.message);
+                    } else {
+                        alert('✅ Объявление помечено как проданное!');
+                        loadMyOffers();
+                    }
+                });
+            });
+            
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    if (confirm('Вы уверены, что хотите удалить это объявление?')) {
+                        const id = btn.getAttribute('data-id');
+                        const { error } = await supabase
+                            .from('offers')
+                            .delete()
+                            .eq('id', id)
+                            .eq('user_id', user.id);
+                        
+                        if (error) {
+                            alert('Ошибка: ' + error.message);
+                        } else {
+                            alert('✅ Объявление удалено!');
+                            loadMyOffers();
+                        }
+                    }
+                });
+            });
+            
+            document.querySelectorAll('.view-reviews-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const sellerId = btn.getAttribute('data-seller');
+                    
+                    if (!sellerId) {
+                        alert('Информация о продавце не найдена');
+                        return;
+                    }
+                    
+                    const reviews = await getSellerReviews(sellerId);
+                    
+                    if (reviews.length === 0) {
+                        alert('⭐ У этого продавца пока нет отзывов');
+                        return;
+                    }
+                    
+                    let message = `⭐ ОТЗЫВЫ О ПРОДАВЦЕ ⭐\n\n`;
+                    reviews.forEach(r => {
+                        message += `★ ${'★'.repeat(r.rating)}${'☆'.repeat(5 - r.rating)}\n`;
+                        if (r.comment) message += `   "${r.comment}"\n`;
+                        message += `   от ${new Date(r.created_at).toLocaleDateString('ru-RU')}\n\n`;
+                    });
+                    alert(message);
+                });
+            });
+            
+            document.querySelectorAll('.reply-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const offerId = btn.getAttribute('data-id');
+                    const offerName = btn.getAttribute('data-name');
+                    const offerPrice = btn.getAttribute('data-price');
+                    
+                    const partners = await getChatPartners(offerId);
+                    
+                    if (partners.length === 0) {
+                        alert('😊 Пока никто не писал вам по этому объявлению');
+                        return;
+                    }
+                    
+                    if (partners.length === 1) {
+                        window.location.href = `chat.html?user_id=${partners[0].id}&name=${encodeURIComponent(partners[0].name)}&offer_id=${offerId}&product=${encodeURIComponent(offerName)}&price=${offerPrice}`;
+                    } else {
+                        let message = `💬 Выберите собеседника для объявления "${offerName}":\n\n`;
+                        partners.forEach((p, index) => {
+                            message += `${index + 1}. ${p.name}\n`;
+                        });
+                        const choice = prompt(message + '\n\nВведите номер собеседника:');
+                        const selected = partners[parseInt(choice) - 1];
+                        if (selected) {
+                            window.location.href = `chat.html?user_id=${selected.id}&name=${encodeURIComponent(selected.name)}&offer_id=${offerId}&product=${encodeURIComponent(offerName)}&price=${offerPrice}`;
+                        }
+                    }
+                });
+            });
+        }
+        
+        await loadMyOffers();
+        
+        const avatarLetter = (user.user_metadata?.username?.[0] || user.email?.[0] || 'U').toUpperCase();
+        const userAvatar = document.getElementById('userAvatar');
+        if (userAvatar) userAvatar.textContent = avatarLetter;
+        
+        document.getElementById('userProfile').style.display = 'flex';
+        document.getElementById('authButtons').style.display = 'none';
+        
+        const userAvatarElem = document.getElementById('userAvatar');
+        const userDropdown = document.getElementById('userDropdown');
+        
+        userAvatarElem.addEventListener('click', (e) => {
+            e.stopPropagation();
+            userDropdown.classList.toggle('show');
+        });
+        
+        document.addEventListener('click', () => {
+            userDropdown.classList.remove('show');
+        });
+        
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+            await supabase.auth.signOut();
+            window.location.href = 'index.html';
+        });
+    </script>
+</body>
+</html>

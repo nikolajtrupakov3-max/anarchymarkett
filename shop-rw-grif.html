@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReallyWorld | ГРИФЕРСКОЕ ВЫЖИВАНИЕ</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="reallyworld-grif-page">
+
+    <div class="top-bar">
+        <div class="logo">
+            <img src="images/logo.png" alt="AnarchyMarket" class="logo-img">
+        </div>
+        <div class="nav-links">
+            <a href="index.html">Главная</a>
+            <a href="about.html">О проекте</a>
+            <a href="#">Поддержка</a>
+        </div>
+        <div class="auth-buttons" id="authButtons">
+            <a href="login.html" class="login-btn">Вход</a>
+            <a href="register.html" class="register-btn">Регистрация</a>
+        </div>
+        <div class="user-profile" id="userProfile" style="display: none;">
+            <div class="user-avatar" id="userAvatar">👤</div>
+            <div class="user-dropdown" id="userDropdown">
+                <a href="profile.html" class="dropdown-item">👤 Мой профиль</a>
+                <a href="my-offers.html" class="dropdown-item">📦 Мои объявления</a>
+                <div class="dropdown-divider"></div>
+                <div class="dropdown-item" id="logoutBtn">🚪 Выйти</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="server-title">
+        <h1>🌍 ReallyWorld - ГРИФЕРСКОЕ ВЫЖИВАНИЕ</h1>
+        <p>Классический гриф на выживание</p>
+    </div>
+
+    <div class="categories-section">
+        <div class="categories-grid">
+            <div class="category-card" data-category="resources">
+                <div class="category-icon">💎</div>
+                <h3>Блоки и ресурсы</h3>
+                <p>Алмазы, незерит, редкие руды</p>
+                <button class="select-category-btn">Перейти →</button>
+            </div>
+            <div class="category-card" data-category="weapons">
+                <div class="category-icon">⚔️</div>
+                <h3>Оружие</h3>
+                <p>Мечи, луки, топоры с зачарованиями</p>
+                <button class="select-category-btn">Перейти →</button>
+            </div>
+            <div class="category-card" data-category="armor">
+                <div class="category-icon">🛡️</div>
+                <h3>Броня</h3>
+                <p>Незеритовая броня, зачарования</p>
+                <button class="select-category-btn">Перейти →</button>
+            </div>
+            <div class="category-card" data-category="potions">
+                <div class="category-icon">🧪</div>
+                <h3>Зелья и еда</h3>
+                <p>Зелья силы, регенерации, золотые яблоки</p>
+                <button class="select-category-btn">Перейти →</button>
+            </div>
+            <div class="category-card" data-category="rare">
+                <div class="category-icon">📜</div>
+                <h3>Редкие предметы</h3>
+                <p>Элитры, тотемы, спавнеры</p>
+                <button class="select-category-btn">Перейти →</button>
+            </div>
+            <div class="category-card" data-category="other">
+                <div class="category-icon">📦</div>
+                <h3>Другое</h3>
+                <p>Всё остальное</p>
+                <button class="select-category-btn">Перейти →</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="back-button">
+        <a href="reallyworld-mode.html" class="back-link">← Вернуться к выбору сервера</a>
+    </div>
+
+    <div class="support-modal" id="supportModal">
+        <div class="support-modal-content">
+            <span class="support-close" id="supportCloseBtn">&times;</span>
+            <h2>📱 Связь с поддержкой</h2>
+            <p>Напишите нам в Telegram</p>
+            <div class="qr-container">
+                <div class="qr-placeholder">
+                    🟩🟩🟩🟩🟩🟩🟩<br>
+                    🟩⬜⬜⬜⬜⬜🟩<br>
+                    🟩⬜🟩🟩🟩⬜🟩<br>
+                    🟩⬜🟩⬜🟩⬜🟩<br>
+                    🟩⬜🟩🟩🟩⬜🟩<br>
+                    🟩⬜⬜⬜⬜⬜🟩<br>
+                    🟩🟩🟩🟩🟩🟩🟩
+                </div>
+            </div>
+            <p>Telegram: <strong id="telegramUsername">@anarchy_market</strong></p>
+            <button class="copy-tg-btn" id="copyTgBtn">📋 Скопировать username</button>
+            <p class="qr-hint">Или отсканируйте QR-код камерой телефона</p>
+        </div>
+    </div>
+
+    <script type="module" src="js/shop-rw-grif.js"></script>
+</body>
+</html>
